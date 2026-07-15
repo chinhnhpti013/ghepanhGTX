@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghép ảnh Giám định Giấy tờ xe (GTX) — PTI SOS</title>
+<style>
+  :root {
+    --blue: #0070c0;
+    --blue-dark: #005699;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1a2733;
+    --muted: #5a6b7b;
+    --border: #e2e8ef;
+    --code-bg: #f0f3f7;
+    --danger: #c0392b;
+    --danger-bg: #fdecea;
+    --ok: #1e8e5a;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f151b;
+      --card: #172029;
+      --text: #e6edf3;
+      --muted: #9bb0c1;
+      --border: #253340;
+      --code-bg: #0d1319;
+      --danger: #ff6b5e;
+      --danger-bg: #2a1512;
+      --ok: #4ecb8a;
+      --shadow: 0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px; }
+
+  header {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+    color: #fff; padding: 34px 0 30px;
+  }
+  header .wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .logo-badge {
+    width: 56px; height: 56px; border-radius: 13px; background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center; font-size: 27px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,.25);
+  }
+  header h1 { margin: 0 0 3px; font-size: 23px; font-weight: 700; letter-spacing: -.3px; }
+  header p { margin: 0; opacity: .9; font-size: 14px; }
+
+  main { padding: 30px 0 60px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 24px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  h2 { font-size: 17px; margin: 0 0 4px; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 13.5px; margin: 0 0 18px; }
+
+  /* Dropzones */
+  .drop {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 22px; text-align: center;
+    cursor: pointer; transition: border-color .15s, background .15s; background: var(--code-bg);
+  }
+  .drop:hover, .drop.drag { border-color: var(--blue); background: rgba(0,112,192,.06); }
+  .drop .ico { font-size: 26px; }
+  .drop .t { font-weight: 600; margin-top: 4px; font-size: 14.5px; }
+  .drop .h { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  input[type=file] { display: none; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+
+  label.fld { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; color: var(--muted); }
+  input[type=text] {
+    width: 100%; padding: 10px 13px; border: 1px solid var(--border); border-radius: 9px;
+    background: var(--card); color: var(--text); font-size: 14.5px; font-family: inherit;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,112,192,.15); }
+
+  /* File chips */
+  .files { margin-top: 14px; display: flex; flex-direction: column; gap: 7px; }
+  .chip {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 9px; font-size: 13.5px;
+  }
+  .chip .grp {
+    font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 20px;
+    background: rgba(0,112,192,.14); color: var(--blue); flex-shrink: 0;
+  }
+  .chip .grp.warn { background: rgba(192,60,40,.15); color: var(--danger); }
+  .chip .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip .rm { cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; padding: 2px 4px; border: none; background: none; }
+  .chip .rm:hover { color: var(--danger); }
+  .chip.xls .grp { background: rgba(30,142,90,.16); color: var(--ok); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    background: var(--blue); color: #fff; border: none; border-radius: 10px;
+    padding: 13px 26px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
+    transition: background .15s;
+  }
+  .btn:hover:not(:disabled) { background: var(--blue-dark); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin .7s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .msg { margin-top: 14px; padding: 12px 15px; border-radius: 9px; font-size: 14px; display: none; }
+  .msg.err { display: block; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+
+  /* Result */
+  #result { display: none; }
+  .result-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .result-bar .info { font-size: 14px; }
+  .result-bar .info b { color: var(--ok); }
+  .dl {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    background: var(--ok); color: #fff; padding: 10px 20px; border-radius: 9px; font-weight: 600; font-size: 14px;
+  }
+  iframe { width: 100%; height: 720px; border: 1px solid var(--border); border-radius: 11px; background: #fff; }
+
+  details.help { margin-top: 6px; }
+  details.help summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); }
+  details.help[open] summary { margin-bottom: 12px; color: var(--text); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 440px; }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--border); }
+  th { background: var(--code-bg); font-weight: 600; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  tbody tr:last-child td { border-bottom: none; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 5px; font-size: .9em;
+         font-family: "SF Mono", Consolas, monospace; }
+
+  footer { border-top: 1px solid var(--border); padding: 22px 0; color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo-badge">🚗</div>
+    <div>
+      <h1>Ghép ảnh Giám định Giấy tờ xe (GTX)</h1>
+      <p>Tải ảnh giấy tờ + Excel GTX → tạo PDF giám định chuẩn PTI SOS ngay trên trình duyệt</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <form id="form">
+    <!-- Upload ảnh -->
+    <div class="card">
+      <h2>1. Ảnh &amp; PDF giấy tờ</h2>
+      <p class="sub">Đặt tên file theo nhóm: <code>1.1.jpg</code>, <code>1.2.jpg</code>, <code>2.1.jpg</code>, <code>4.pdf</code>… Số đầu quyết định layout trang.</p>
+      <div class="drop" id="dropImg">
+        <div class="ico">📎</div>
+        <div class="t">Kéo thả hoặc bấm để chọn ảnh / PDF</div>
+        <div class="h">Chấp nhận .jpg, .jpeg, .png, .pdf — chọn nhiều file</div>
+      </div>
+      <input type="file" id="imgInput" multiple accept=".jpg,.jpeg,.png,.pdf">
+      <div class="files" id="imgList"></div>
+    </div>
+
+    <!-- Upload excel + thông tin -->
+    <div class="card">
+      <h2>2. File Excel GTX &amp; thông tin</h2>
+      <p class="sub">File <code>.xlsx</code> chứa biển số xe và danh mục giấy tờ.</p>
+      <div class="drop" id="dropXls">
+        <div class="ico">📊</div>
+        <div class="t">Chọn file GTX.xlsx</div>
+        <div class="h">Chấp nhận .xlsx</div>
+      </div>
+      <input type="file" id="xlsInput" accept=".xlsx">
+      <div class="files" id="xlsList"></div>
+
+      <div class="row" style="margin-top:20px">
+        <div>
+          <label class="fld" for="gdv">Giám định viên</label>
+          <input type="text" id="gdv" placeholder="VD: Nguyễn Văn Hướng">
+        </div>
+        <div>
+          <label class="fld" for="ngay">Ngày giám định</label>
+          <input type="text" id="ngay" placeholder="dd/mm/yyyy">
+        </div>
+      </div>
+    </div>
+
+    <!-- Nút tạo -->
+    <div class="card">
+      <button type="submit" class="btn" id="genBtn">
+        <span class="spinner" id="spin"></span>
+        <span id="btnText">Tạo PDF giám định</span>
+      </button>
+      <div class="msg err" id="errBox"></div>
+    </div>
+  </form>
+
+  <!-- Kết quả -->
+  <div class="card" id="result">
+    <div class="result-bar">
+      <div class="info">✅ Đã tạo: <b id="outName">GiamDinh_GiayToXe.pdf</b></div>
+      <a class="dl" id="dlLink" download>⬇ Tải PDF</a>
+    </div>
+    <iframe id="preview" title="Xem trước PDF"></iframe>
+  </div>
+
+  <!-- Hướng dẫn -->
+  <div class="card">
+    <details class="help">
+      <summary>📖 Quy tắc đặt tên &amp; layout</summary>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Nhóm</th><th>Tên file</th><th>Định dạng</th><th>Số ảnh/trang</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>1.1, 1.2, 1.3…</td><td>A4 Ngang</td><td>4 (2×2)</td></tr>
+            <tr><td>2</td><td>2.1, 2.2…</td><td>A4 Dọc</td><td>2 (1×2)</td></tr>
+            <tr><td>3</td><td>3.1, 3.2…</td><td>A4 Dọc</td><td>2 (1×2)</td></tr>
+            <tr><td>4, 5, 6…</td><td>4.jpg, 5.pdf…</td><td>A4 Dọc</td><td>1 / trang</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">Phòng Giám định và Cứu hộ tại Quảng Ninh — PTI SOS</div>
+</footer>
+
+<script>
+  const imgInput = document.getElementById('imgInput');
+  const xlsInput = document.getElementById('xlsInput');
+  const imgList  = document.getElementById('imgList');
+  const xlsList  = document.getElementById('xlsList');
+  const form     = document.getElementById('form');
+  const errBox   = document.getElementById('errBox');
+  const genBtn   = document.getElementById('genBtn');
+  const spin     = document.getElementById('spin');
+  const btnText  = document.getElementById('btnText');
+  const result   = document.getElementById('result');
+  const preview  = document.getElementById('preview');
+  const dlLink   = document.getElementById('dlLink');
+  const outName  = document.getElementById('outName');
+
+  // Ngày mặc định = hôm nay
+  (function(){
+    const d = new Date();
+    const p = n => String(n).padStart(2,'0');
+    document.getElementById('ngay').value = `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+  })();
+
+  // Lưu file bằng DataTransfer để có thể xóa từng file
+  let imgFiles = [];
+  let xlsFile  = null;
+
+  function groupOf(name){
+    const m = name.match(/^(\d+(?:\.\d+)?)/);
+    return m ? m[1] : null;
+  }
+
+  function renderImgs(){
+    imgList.innerHTML = '';
+    imgFiles.forEach((f, i) => {
+      const g = groupOf(f.name);
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML =
+        `<span class="grp ${g?'':'warn'}">${g ? 'Nhóm '+parseInt(g,10) : '?'}</span>`
+        + `<span class="nm">${f.name}</span>`
+        + `<button type="button" class="rm" data-i="${i}" title="Bỏ">×</button>`;
+      imgList.appendChild(chip);
+    });
+    imgList.querySelectorAll('.rm').forEach(b =>
+      b.onclick = () => { imgFiles.splice(+b.dataset.i, 1); renderImgs(); });
+  }
+
+  function renderXls(){
+    xlsList.innerHTML = '';
+    if (!xlsFile) return;
+    const chip = document.createElement('div');
+    chip.className = 'chip xls';
+    chip.innerHTML = `<span class="grp">XLSX</span><span class="nm">${xlsFile.name}</span>`
+      + `<button type="button" class="rm" title="Bỏ">×</button>`;
+    chip.querySelector('.rm').onclick = () => { xlsFile = null; xlsInput.value=''; renderXls(); };
+    xlsList.appendChild(chip);
+  }
+
+  function addImgs(fileList){
+    for (const f of fileList){
+      const ok = /\.(jpe?g|png|pdf)$/i.test(f.name);
+      if (ok && !imgFiles.some(x => x.name === f.name && x.size === f.size)) imgFiles.push(f);
+    }
+    imgFiles.sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true}));
+    renderImgs();
+  }
+
+  // Bấm chọn
+  document.getElementById('dropImg').onclick = () => imgInput.click();
+  document.getElementById('dropXls').onclick = () => xlsInput.click();
+  imgInput.onchange = () => addImgs(imgInput.files);
+  xlsInput.onchange = () => { if (xlsInput.files[0]) { xlsFile = xlsInput.files[0]; renderXls(); } };
+
+  // Kéo thả
+  function wireDrop(el, handler){
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag'));
+    el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drag'); handler(e.dataTransfer.files); });
+  }
+  wireDrop(document.getElementById('dropImg'), addImgs);
+  wireDrop(document.getElementById('dropXls'), fl => {
+    const f = [...fl].find(x => /\.xlsx$/i.test(x.name));
+    if (f) { xlsFile = f; renderXls(); }
+  });
+
+  function showErr(msg){ errBox.textContent = msg; errBox.classList.add('err'); errBox.style.display='block'; }
+  function clearErr(){ errBox.style.display='none'; }
+
+  function setLoading(on){
+    genBtn.disabled = on;
+    spin.style.display = on ? 'inline-block' : 'none';
+    btnText.textContent = on ? 'Đang tạo PDF…' : 'Tạo PDF giám định';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErr();
+    if (!xlsFile) return showErr('Vui lòng chọn file Excel GTX (.xlsx).');
+    if (imgFiles.length === 0) return showErr('Vui lòng chọn ít nhất một ảnh hoặc PDF giấy tờ.');
+
+    const fd = new FormData();
+    imgFiles.forEach(f => fd.append('images', f, f.name));
+    fd.append('excel', xlsFile, xlsFile.name);
+    fd.append('gdv', document.getElementById('gdv').value.trim());
+    fd.append('ngay', document.getElementById('ngay').value.trim());
+
+    setLoading(true);
+    try {
+      const res = await fetch('/generate', { method: 'POST', body: fd });
+      const ct = res.headers.get('Content-Type') || '';
+      if (!res.ok || !ct.includes('pdf')) {
+        let m = 'Có lỗi xảy ra khi tạo PDF.';
+        try { const j = await res.json(); if (j.error) m = j.error; } catch(_) {}
+        throw new Error(m);
+      }
+      const disp = res.headers.get('Content-Disposition') || '';
+      const nm = (disp.match(/filename="?([^"]+)"?/) || [])[1] || 'GiamDinh_GiayToXe.pdf';
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      preview.src = url;
+      dlLink.href = url;
+      dlLink.download = nm;
+      outName.textContent = nm;
+      result.style.display = 'block';
+      result.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      showErr(err.message || 'Không thể kết nối máy chủ.');
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+# === Dữ liệu cá nhân — KHÔNG đẩy lên GitHub ===
+# Giấy tờ thật (đăng ký xe, bằng lái, bảo hiểm) và PDF giám định
+input/
+output/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# === Tạm / hệ thống ===
+*.log
+*.tmp
+Thumbs.db
+.DS_Store
+
+# === Gói skill đóng gói ===
+.claude/skills/*.zip
