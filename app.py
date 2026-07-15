@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import tempfile
+import traceback
 
 from flask import Flask, request, send_file, jsonify, send_from_directory
 
@@ -103,10 +104,26 @@ def generate():
             download_name=download_name,
         )
     except Exception as e:
-        return jsonify({"error": f"Lỗi xử lý: {e}"}), 500
+        # In traceback đầy đủ ra terminal để chẩn đoán
+        print("=" * 60)
+        print("LỖI khi tạo PDF:")
+        traceback.print_exc()
+        print("=" * 60)
+        return jsonify({"error": f"Lỗi xử lý: {type(e).__name__}: {e}"}), 500
     finally:
         # Dọn thư mục tạm sau khi gửi file (send_file đã đọc xong vào bộ nhớ)
         shutil.rmtree(work, ignore_errors=True)
+
+
+@app.errorhandler(Exception)
+def handle_any_error(e):
+    """Đảm bảo MỌI lỗi đều trả về JSON (không phải trang HTML 500),
+    để giao diện luôn hiển thị được lý do thật."""
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return jsonify({"error": f"{e.code} {e.name}: {e.description}"}), e.code
+    traceback.print_exc()
+    return jsonify({"error": f"Lỗi máy chủ: {type(e).__name__}: {e}"}), 500
 
 
 if __name__ == "__main__":

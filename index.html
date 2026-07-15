@@ -348,8 +348,14 @@
       const res = await fetch('/generate', { method: 'POST', body: fd });
       const ct = res.headers.get('Content-Type') || '';
       if (!res.ok || !ct.includes('pdf')) {
-        let m = 'Có lỗi xảy ra khi tạo PDF.';
-        try { const j = await res.json(); if (j.error) m = j.error; } catch(_) {}
+        let m = '';
+        try {
+          const j = await res.json();
+          if (j && j.error) m = j.error;
+        } catch(_) {
+          try { const t = await res.text(); if (t) m = t.slice(0, 300); } catch(__) {}
+        }
+        if (!m) m = `Máy chủ trả lỗi (HTTP ${res.status}). Xem chi tiết ở cửa sổ terminal đang chạy server.`;
         throw new Error(m);
       }
       const disp = res.headers.get('Content-Disposition') || '';

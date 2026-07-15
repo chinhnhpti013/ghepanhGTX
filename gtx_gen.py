@@ -327,6 +327,12 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
     total = len(pages_info)
     print(f"Tổng số trang: {total}")
 
+    if total == 0:
+        raise ValueError(
+            "Không có ảnh nào được phân loại. Kiểm tra tên file phải bắt đầu bằng "
+            "số nhóm (ví dụ 1.1.jpg, 2.1.jpg, 4.pdf)."
+        )
+
     from reportlab.pdfgen import canvas as rlc
     from reportlab.lib.units import cm
     from reportlab.lib.utils import ImageReader
