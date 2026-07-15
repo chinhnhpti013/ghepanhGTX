@@ -156,6 +156,19 @@
 
 <main class="wrap">
 
+  <div class="card" id="wrongServer" style="display:none; border-color: var(--danger); background: var(--danger-bg);">
+    <h2 style="color: var(--danger)">⚠️ Trang chưa mở qua server Flask</h2>
+    <p class="sub" style="margin-bottom:10px">
+      Bạn đang mở trang này bằng công cụ file tĩnh (Live Server / Live Preview) hoặc trực tiếp từ file —
+      nên nút “Tạo PDF” sẽ báo lỗi <b>HTTP 405</b>. Cần chạy server Flask và mở đúng địa chỉ:
+    </p>
+    <pre style="margin:0"><code>cd "d:\MCP\Claude Code\anh-giay-to-xe"
+python app.py</code></pre>
+    <p class="sub" style="margin:10px 0 0">
+      Sau đó mở <b>http://127.0.0.1:5000</b> trong trình duyệt.
+    </p>
+  </div>
+
   <form id="form">
     <!-- Upload ảnh -->
     <div class="card">
@@ -257,6 +270,17 @@
     const d = new Date();
     const p = n => String(n).padStart(2,'0');
     document.getElementById('ngay').value = `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+  })();
+
+  // Kiểm tra có đang chạy qua server Flask không (tránh lỗi HTTP 405 do Live Server)
+  (async function(){
+    try {
+      const r = await fetch('/health', { cache: 'no-store' });
+      const j = await r.json();
+      if (!j || j.app !== 'gtx') throw new Error('not gtx');
+    } catch(_) {
+      document.getElementById('wrongServer').style.display = 'block';
+    }
   })();
 
   // Lưu file bằng DataTransfer để có thể xóa từng file

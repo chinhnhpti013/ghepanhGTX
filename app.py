@@ -39,6 +39,12 @@ def index():
     return send_from_directory(BASE, "index.html")
 
 
+@app.route("/health")
+def health():
+    """Điểm kiểm tra để giao diện xác nhận đang chạy qua server Flask."""
+    return jsonify({"ok": True, "app": "gtx"})
+
+
 @app.route("/generate", methods=["POST"])
 def generate():
     images = request.files.getlist("images")
