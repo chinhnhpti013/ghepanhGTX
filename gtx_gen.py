@@ -18,24 +18,38 @@ BLUE  = (0, 112, 192)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY  = (200, 200, 200)
-FONT_DIR  = r"C:\Windows\Fonts"
+FONT_DIR  = r"C:\Windows\Fonts"                                   # Windows (máy cá nhân)
+FONT_LOCAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")  # kèm repo (đa nền tảng)
 
 def pt2px(pt):
     return int(pt * DPI / 72)
 
 def get_font(bold=False, italic=False, pt=12):
+    """Tìm font theo thứ tự ưu tiên để chạy được cả Windows lẫn Linux (server).
+
+    - Windows: dùng Arial nếu có (giữ nguyên giao diện cũ trên máy cá nhân).
+    - Linux/hosting: dùng Be Vietnam Pro đóng gói sẵn trong repo (fonts/),
+      cuối cùng mới đến DejaVu của hệ thống. Bảo đảm hiển thị đủ tiếng Việt.
+    """
     px = pt2px(pt)
     if bold:
-        paths = [os.path.join(FONT_DIR, "arialbd.ttf")]
-    elif italic:
-        paths = [os.path.join(FONT_DIR, "ariali.ttf")]
+        paths = [
+            os.path.join(FONT_DIR, "arialbd.ttf"),
+            os.path.join(FONT_LOCAL, "BeVietnamPro-Bold.ttf"),
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        ]
     else:
-        paths = [os.path.join(FONT_DIR, "arial.ttf")]
+        # Repo không kèm bản Italic của Be Vietnam Pro → italic dùng Regular thay thế.
+        paths = [
+            os.path.join(FONT_DIR, "ariali.ttf" if italic else "arial.ttf"),
+            os.path.join(FONT_LOCAL, "BeVietnamPro-Regular.ttf"),
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]
     for p in paths:
         if os.path.exists(p):
             try:
                 return ImageFont.truetype(p, px)
-            except:
+            except Exception:
                 pass
     return ImageFont.load_default()
 

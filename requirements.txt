@@ -4,3 +4,4 @@ reportlab
 numpy
 PyMuPDF
 Flask
+gunicorn

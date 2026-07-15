@@ -1,0 +1,11 @@
+# Cấu hình deploy tự động lên Render.com (Blueprint)
+# Trên Render: New + -> Blueprint -> chọn repo này -> Apply
+services:
+  - type: web
+    name: gtx-giam-dinh-giay-to-xe
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # 1 worker, timeout 120s để đủ thời gian tạo PDF nhiều ảnh
+    startCommand: gunicorn app:app --workers 1 --timeout 120
+    autoDeploy: true
