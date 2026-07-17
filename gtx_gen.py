@@ -255,6 +255,32 @@ def create_portrait_page_2(imgs, page_num, total, hinfo, logo_img):
         draw.rectangle([cx, cy, cx + cw, cy + ch], outline=GRAY, width=1)
     return page
 
+def create_portrait_page_4(imgs, page_num, total, hinfo, logo_img):
+    """A4 dọc, 4 ảnh xếp theo 2 cột × 2 hàng."""
+    W, H = PORTRAIT_W, PORTRAIT_H
+    COLS, ROWS = 2, 2
+    page = Image.new('RGB', (W, H), WHITE)
+    draw = ImageDraw.Draw(page)
+    draw_header(page, draw, W, HEADER_H, MARGIN, LOGO_PX, logo_img, hinfo['bks'], hinfo.get('gdv', ''), hinfo.get('ngay', ''))
+    draw_footer(page, draw, W, H, FOOTER_H, MARGIN, page_num, total)
+    draw.rectangle([0, 0, W - 1, H - 1], outline=GRAY, width=1)
+    cw = (W - 2 * MARGIN) // COLS
+    ch = (H - HEADER_H - FOOTER_H) // ROWS
+    iah = ch - CAPTION_H
+    for idx, (ip, cap) in enumerate(imgs[:COLS * ROWS]):
+        col, row = idx % COLS, idx // COLS
+        cx = MARGIN + col * cw
+        cy = HEADER_H + row * ch
+        draw.rectangle([cx, cy, cx + cw, cy + ch], outline=GRAY, width=1)
+        paste_image_in_cell(page, ip, cx, cy, cw, iah)
+        draw_caption(page, draw, cap, cx, cy, cw, ch, CAPTION_H)
+    for idx in range(len(imgs), COLS * ROWS):
+        col, row = idx % COLS, idx // COLS
+        cx = MARGIN + col * cw
+        cy = HEADER_H + row * ch
+        draw.rectangle([cx, cy, cx + cw, cy + ch], outline=GRAY, width=1)
+    return page
+
 def create_portrait_page_1(ip, cap, page_num, total, hinfo, logo_img):
     W, H = PORTRAIT_W, PORTRAIT_H
     page = Image.new('RGB', (W, H), WHITE)
@@ -328,10 +354,10 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
         for i in range(0, len(classified[2]), 2):
             pages_info.append(('portrait2', classified[2][i:i+2]))
 
-    # Nhóm 3 — A4 dọc, tối đa 2 ảnh/trang (1 cột × 2 hàng)
+    # Nhóm 3 — A4 dọc, tối đa 4 ảnh/trang (2 cột × 2 hàng)
     if 3 in classified:
-        for i in range(0, len(classified[3]), 2):
-            pages_info.append(('portrait2', classified[3][i:i+2]))
+        for i in range(0, len(classified[3]), 4):
+            pages_info.append(('portrait4', classified[3][i:i+4]))
 
     # Nhóm khác (4, 5, 6...) — A4 dọc, 1 ảnh/trang
     for nhom in sorted(k for k in classified if k >= 4):
@@ -360,6 +386,9 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
             pw, ph = 29.7 * cm, 21 * cm
         elif ptype == 'portrait2':
             pg = create_portrait_page_2([(d[0], d[1]) for d in data], p_idx, total, hinfo, logo_img)
+            pw, ph = 21 * cm, 29.7 * cm
+        elif ptype == 'portrait4':
+            pg = create_portrait_page_4([(d[0], d[1]) for d in data], p_idx, total, hinfo, logo_img)
             pw, ph = 21 * cm, 29.7 * cm
         else:
             d = data[0]

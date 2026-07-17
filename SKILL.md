@@ -56,6 +56,7 @@ De thay doi GDV hoac duong dan, sua phan `if __name__ == "__main__":` trong `gtx
 | Font | Linux paths | Windows `C:\Windows\Fonts\` | 2026-05-28 |
 | Thu muc du lieu | `/mnt/user-data/uploads` | `input\` | 2026-05-28 |
 | So trang footer | Can giua | Ngoai cung ben PHAI | 2026-06-09 |
+| Layout nhom 3 | A4 doc, 2 anh (1x2) | A4 doc, 4 anh (2x2) | 2026-07-17 |
 
 ---
 
@@ -83,9 +84,10 @@ FONT_DIR = r"C:\Windows\Fonts"
 
 | STT | Layout | So anh/trang |
 |-----|--------|-------------|
-| 1, 2 | A4 NGANG | 4 anh (2 cot x 2 hang) |
-| 3, 4 (gop chung) | A4 DOC | 3 anh (1 cot x 3 hang) |
-| 5, 6 | A4 DOC | 1 anh/trang |
+| 1 | A4 NGANG | 4 anh (2 cot x 2 hang) |
+| 2 | A4 DOC | 2 anh (1 cot x 2 hang) |
+| 3 | A4 DOC | 4 anh (2 cot x 2 hang) |
+| 4, 5, 6 | A4 DOC | 1 anh/trang |
 
 ---
 

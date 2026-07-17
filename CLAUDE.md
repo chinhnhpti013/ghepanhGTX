@@ -23,7 +23,7 @@ Ví dụ: `1.1.jpg`, `1.2.jpg`, `2.1.jpg`, `3.jpg`
 |----------|------|-----------------|
 | `1.*.jpg` (1.1, 1.2, 1.3, 1.4...) | 1 | "1. Đăng ký xe" |
 | `2.*.jpg` (2.1, 2.2...) | 2 | "2. Bằng lái người điều khiển phương tiện" |
-| `3.jpg` hoặc `3.*.jpg` | 3 | "3. Giấy chứng nhận đăng kiểm XCG" |
+| `3.*.jpg` (3.1, 3.2, 3.3, 3.4...) | 3 | "3. Giấy chứng nhận đăng kiểm XCG" |
 | `4.jpg` hoặc `4.pdf` | 4 | "4. Xác minh bằng lái" |
 | `5.jpg` hoặc `5.pdf` | 5 | "5. Giấy chứng nhận bảo hiểm XCG" |
 | `6.jpg` hoặc `6.pdf` | 6 | "6. Giấy chứng nhận bảo hiểm VCX" |
@@ -50,13 +50,13 @@ Lấy từ lệnh người dùng sau "GĐV:". Nếu không có → bỏ trống.
 |------|--------|--------------|---------|
 | **1** | A4 NGANG | 4 ảnh (2 cột × 2 hàng) | Tất cả ảnh nhóm 1.x ghép vào 1 trang ngang |
 | **2** | A4 DỌC | 2 ảnh (1 cột × 2 hàng) | Tất cả ảnh nhóm 2.x ghép vào 1 trang dọc |
-| **3** | A4 DỌC | 2 ảnh (1 cột × 2 hàng) | Tất cả ảnh nhóm 3.x ghép vào 1 trang dọc |
+| **3** | A4 DỌC | 4 ảnh (2 cột × 2 hàng) | Tất cả ảnh nhóm 3.x ghép vào 1 trang dọc |
 | **Khác (4, 5, 6...)** | A4 DỌC | 1 ảnh/trang | Mỗi ảnh/trang riêng biệt |
 
 **Quy tắc phân trang:**
 - Nhóm 1: tối đa 4 ảnh/trang A4 ngang (2 cột × 2 hàng); nếu >4 ảnh thì tạo thêm trang
 - Nhóm 2: tối đa 2 ảnh/trang A4 dọc (1 cột × 2 hàng); nếu >2 ảnh thì tạo thêm trang
-- Nhóm 3: tối đa 2 ảnh/trang A4 dọc (1 cột × 2 hàng); nếu >2 ảnh thì tạo thêm trang
+- Nhóm 3: tối đa 4 ảnh/trang A4 dọc (2 cột × 2 hàng); nếu >4 ảnh thì tạo thêm trang
 - Nhóm khác (4, 5, 6...): mỗi ảnh 1 trang A4 dọc riêng biệt
 
 ---
