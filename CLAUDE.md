@@ -31,6 +31,12 @@ Ví dụ: `1.1.jpg`, `1.2.jpg`, `2.1.jpg`, `3.jpg`
 File PDF tự động chuyển sang ảnh bằng PyMuPDF (`pip install PyMuPDF`).
 Caption thực tế đọc từ file Excel GTX (cột STT + Tên giấy tờ).
 
+> **Quan trọng — Excel phải có đủ dòng cho MỌI nhóm ảnh.**
+> Code khớp caption theo **key STT** (ví dụ ảnh `3.1.jpg` → tìm dòng STT `3.1` trong Excel).
+> Nếu Excel **thiếu** dòng của nhóm nào (ví dụ có ảnh `3.1`–`3.4` nhưng Excel không có STT `3.x`),
+> caption sẽ bị fallback thành `"Hạng mục 3.1"...` — **không phải lỗi code**, mà do thiếu dữ liệu.
+> → Cách xử lý: **bổ sung dòng STT tương ứng vào GTX.xlsx** (STT + Tên giấy tờ), rồi chạy lại.
+
 ### File Excel GTX (.xlsx)
 
 ```
