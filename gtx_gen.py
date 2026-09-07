@@ -1,4 +1,5 @@
 import openpyxl, re, os, io, sys
+from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import numpy as np
 
@@ -24,12 +25,17 @@ FONT_LOCAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")  
 def pt2px(pt):
     return int(pt * DPI / 72)
 
+@lru_cache(maxsize=None)
 def get_font(bold=False, italic=False, pt=12):
     """Tìm font theo thứ tự ưu tiên để chạy được cả Windows lẫn Linux (server).
 
     - Windows: dùng Arial nếu có (giữ nguyên giao diện cũ trên máy cá nhân).
     - Linux/hosting: dùng Be Vietnam Pro đóng gói sẵn trong repo (fonts/),
       cuối cùng mới đến DejaVu của hệ thống. Bảo đảm hiển thị đủ tiếng Việt.
+
+    Kết quả được cache (lru_cache): mỗi tổ hợp (bold, italic, pt) chỉ đọc và
+    parse file font từ đĩa MỘT lần cho cả quá trình chạy, thay vì mỗi lần vẽ
+    chữ (mỗi trang PDF gọi hàm này 5-6 lần) lại phải mở lại file font.
     """
     px = pt2px(pt)
     if bold:
@@ -151,8 +157,6 @@ def draw_header(page, draw, W, HEADER_H, MARGIN, logo_px, logo_img, bks, gdv, ng
     text_w = W - text_x - MARGIN
     font_title = get_font(bold=True, pt=16)
     font_gdv   = get_font(bold=False, pt=12)
-    title_lines = wrap_text(draw, f"Giam dinh Giay to xe o to bien kiem soat: {bks}", font_title, text_w)
-    # Use actual Vietnamese text
     title_lines = wrap_text(draw, f"Giám định Giấy tờ xe ô tô biển kiểm soát: {bks}", font_title, text_w)
     tlh = pt2px(16) + 4
     total_th = len(title_lines) * tlh
@@ -197,6 +201,16 @@ def draw_caption(page, draw, caption, cx, cy, cell_w, cell_h, CAPTION_H):
 def paste_image_in_cell(page, img_path, cx, cy, cell_w, img_area_h):
     try:
         img = Image.open(img_path)
+        # Ảnh chụp điện thoại thường rất lớn (3000-4000px+) trong khi ô hiển thị
+        # chỉ vài trăm px. draft() yêu cầu decoder JPEG giải mã sẵn ở độ phân
+        # giải thấp hơn (nhanh + ít RAM hơn nhiều) thay vì giải mã full-res rồi
+        # mới resize xuống. Nhân đôi kích thước đích để LANCZOS resize sau đó
+        # vẫn còn đủ chi tiết cho ảnh nét. Không ảnh hưởng PNG (draft chỉ tác
+        # động lên JPEG, các định dạng khác bỏ qua).
+        try:
+            img.draft('RGB', (cell_w * 2, img_area_h * 2))
+        except Exception:
+            pass
         img = ImageOps.exif_transpose(img).convert('RGB')
         iw, ih = img.size
         scale = min(cell_w / iw, img_area_h / ih)
@@ -302,7 +316,7 @@ def pdf_to_images(pdf_path, stt, tmp_dir):
     doc = fitz.open(pdf_path)
     paths = []
     for i, page in enumerate(doc):
-        mat = fitz.Matrix(150/72, 150/72)
+        mat = fitz.Matrix(DPI/72, DPI/72)
         pix = page.get_pixmap(matrix=mat)
         out = os.path.join(tmp_dir, f"{stt}_{i+1:03d}_pdf.jpg")
         pix.save(out)
@@ -321,9 +335,12 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
 
     tmp_dir = tempfile.mkdtemp()
 
+    # Quét thư mục input MỘT lần duy nhất (thay vì 2 lần) rồi phân loại luôn
+    all_files = sorted(os.listdir(image_dir))
+
     # Chuyển PDF thành ảnh trước
     pdf_image_paths = []
-    for f in sorted(os.listdir(image_dir)):
+    for f in all_files:
         if f.lower().endswith('.pdf'):
             m = re.match(r'^(\d+)', f)
             if m:
@@ -334,7 +351,7 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
 
     image_paths = [
         os.path.join(image_dir, f)
-        for f in os.listdir(image_dir)
+        for f in all_files
         if f.lower().endswith(('.jpg', '.jpeg', '.png')) and 'logo' not in f.lower()
     ] + pdf_image_paths
     classified = classify_images(image_paths, items)
