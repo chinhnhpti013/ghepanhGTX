@@ -221,7 +221,10 @@ python app.py</code></pre>
   <div class="card" id="result">
     <div class="result-bar">
       <div class="info">✅ Đã tạo: <b id="outName">GiamDinh_GiayToXe.pdf</b></div>
-      <a class="dl" id="dlLink" download>⬇ Tải PDF</a>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="dl" id="dlLink" download>⬇ Tải PDF</a>
+        <button type="button" class="dl" id="resetBtn" style="background: var(--blue); border:none; cursor:pointer;">🔄 Làm mới — Tạo hồ sơ khác</button>
+      </div>
     </div>
     <iframe id="preview" title="Xem trước PDF"></iframe>
   </div>
@@ -264,13 +267,36 @@ python app.py</code></pre>
   const preview  = document.getElementById('preview');
   const dlLink   = document.getElementById('dlLink');
   const outName  = document.getElementById('outName');
+  const resetBtn = document.getElementById('resetBtn');
 
-  // Ngày mặc định = hôm nay
-  (function(){
+  function setTodayDate(){
     const d = new Date();
     const p = n => String(n).padStart(2,'0');
     document.getElementById('ngay').value = `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
-  })();
+  }
+
+  // Ngày mặc định = hôm nay
+  setTodayDate();
+
+  // Làm mới toàn bộ form sau khi hoàn tất 1 tác vụ, sẵn sàng cho hồ sơ tiếp theo
+  function resetForm(){
+    imgFiles = [];
+    xlsFile = null;
+    imgInput.value = '';
+    xlsInput.value = '';
+    renderImgs();
+    renderXls();
+    document.getElementById('gdv').value = '';
+    setTodayDate();
+    clearErr();
+    if (preview.src) { try { URL.revokeObjectURL(preview.src); } catch(_){} }
+    preview.src = '';
+    if (dlLink.href) { try { URL.revokeObjectURL(dlLink.href); } catch(_){} }
+    dlLink.removeAttribute('href');
+    result.style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  resetBtn.onclick = resetForm;
 
   // Kiểm tra có đang chạy qua server Flask không (tránh lỗi HTTP 405 do Live Server)
   (async function(){
