@@ -82,7 +82,7 @@ Lấy từ lệnh người dùng sau "GĐV:". Nếu không có → bỏ trống.
 
 ### Footer
 - Nền trắng
-- Trái: `Phòng Giám định và Cứu hộ tại Quảng Ninh` — 10pt xám
+- Trái: `Phòng Cứu hộ & Giám định tại khu vực Quảng Ninh` — 10pt xám
 - Phải: `Trang X/Y` — 10pt italic đen, căn sát mép phải (cách MARGIN)
 
 ---
@@ -217,7 +217,7 @@ def draw_footer(page,draw,W,H,FOOTER_H,MARGIN,page_num,total_pages):
     draw.line([0,fy,W,fy],fill=GRAY,width=1)
     font_f=get_font(bold=False,pt=10); font_fi=get_font(italic=True,pt=10)
     ty=fy+(FOOTER_H-pt2px(10))//2
-    draw.text((MARGIN,ty),"Phòng Giám định và Cứu hộ tại Quảng Ninh",font=font_f,fill=(128,128,128))
+    draw.text((MARGIN,ty),"Phòng Cứu hộ & Giám định tại khu vực Quảng Ninh",font=font_f,fill=(128,128,128))
     pt=f"Trang {page_num}/{total_pages}"
     bb=draw.textbbox((0,0),pt,font=font_fi)
     draw.text(((W-(bb[2]-bb[0]))//2,ty),pt,font=font_fi,fill=BLACK)

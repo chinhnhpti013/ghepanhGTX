@@ -178,7 +178,7 @@ def draw_footer(page, draw, W, H, FOOTER_H, MARGIN, page_num, total_pages):
     font_f  = get_font(bold=False, pt=10)
     font_fi = get_font(italic=True, pt=10)
     ty = fy + (FOOTER_H - pt2px(10)) // 2
-    draw.text((MARGIN, ty), "Phòng Giám định và Cứu hộ tại Quảng Ninh", font=font_f, fill=(128, 128, 128))
+    draw.text((MARGIN, ty), "Phòng Cứu hộ & Giám định tại khu vực Quảng Ninh", font=font_f, fill=(128, 128, 128))
     pt_text = f"Trang {page_num}/{total_pages}"
     bb = draw.textbbox((0, 0), pt_text, font=font_fi)
     draw.text((W - MARGIN - (bb[2] - bb[0]), ty), pt_text, font=font_fi, fill=BLACK)
