@@ -1,4 +1,4 @@
-import openpyxl, re, os, io, sys
+import re, os, io, sys
 from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import numpy as np
@@ -69,56 +69,69 @@ def process_logo(logo_path, size_px):
     data[is_blue] = [255, 255, 255, 255]
     return Image.fromarray(data).resize((size_px, size_px), Image.LANCZOS)
 
-def read_gtx_excel(path):
-    wb = openpyxl.load_workbook(path)
-    ws = wb.active
-    bks = ""
-    # Collect all cell values from first 8 rows
-    all_cells = []
-    for row in ws.iter_rows(min_row=1, max_row=8, values_only=True):
-        all_cells.extend([c for c in row if c])
-    # Find plate number pattern anywhere
-    for cell in all_cells:
-        if isinstance(cell, str):
-            m = re.search(r'\d{2}[A-Z]-?\d{3,5}\.?\d*', cell)
-            if m:
-                bks = m.group(0)
-                break
-    items = {}
-    for row in ws.iter_rows(values_only=True):
-        c0 = row[0]
-        c1 = row[1] if len(row) > 1 else None
-        if c0 is None or not (c1 and isinstance(c1, str)):
-            continue
-        # STT có thể là số nguyên (3) hoặc thập phân (1.1, 1.2). Chuẩn hoá thành
-        # chuỗi key khớp với phần đầu tên file: "3", "1.1", "1.2"...
-        if isinstance(c0, int) and c0 > 0:
-            key = str(c0)
-        elif isinstance(c0, float) and c0 > 0:
-            key = str(int(c0)) if c0.is_integer() else str(c0)
-        elif isinstance(c0, str) and re.match(r'^\d+(\.\d+)?$', c0.strip()):
-            key = c0.strip()
-        else:
-            continue
-        items[key] = str(c1).strip()
-    return bks, items
+# ---------------------------------------------------------------------------
+# Danh mục giấy tờ mặc định của dự án (thay cho file Excel GTX trước đây).
+# Key = tiền tố số ở đầu tên file ảnh; value = tên hạng mục dùng làm caption.
+# Nhóm (số nguyên đầu tiên của key) quyết định layout trang:
+#   nhóm 1 → A4 ngang 4 ảnh/trang (2×2)
+#   nhóm 2 → A4 dọc  2 ảnh/trang (1×2)
+#   nhóm 3 → A4 dọc  4 ảnh/trang (2×2)
+#   nhóm ≥ 4 → A4 dọc 1 ảnh/trang
+# Thêm/sửa hạng mục chỉ cần chỉnh bảng này, không cần sửa code bên dưới.
+# ---------------------------------------------------------------------------
+DOC_TYPES = {
+    '1.1': 'Đăng ký xe mặt trước',
+    '1.2': 'Đăng ký xe mặt sau',
+    '1.3': 'Bằng lái mặt trước',
+    '1.4': 'Bằng lái mặt sau',
+    '1.5': 'Căn cước công dân lái xe',
+    '1.6': 'Căn cước công dân lái xe',
+    '2.1': 'Giấy chứng nhận đăng kiểm A5 mặt trước',
+    '2.2': 'Giấy chứng nhận đăng kiểm A5 mặt sau',
+    '2.3': 'Giấy chứng nhận bảo hiểm A5 mặt trước',
+    '2.4': 'Giấy chứng nhận bảo hiểm A5 mặt sau',
+    '3.1': 'Xác minh bằng lái',
+    '3.2': 'Xác minh bằng lái',
+    '3.3': 'Xác minh bằng lái',
+    '3.4': 'Xác minh bằng lái',
+    '3.5': 'Xác minh bằng lái',
+    '3.6': 'Xác minh bằng lái',
+    '4':   'Giấy chứng nhận bảo hiểm A4',
+    '5':   'Xác minh thanh toán phí bảo hiểm',
+    '6':   'Giấy chứng nhận kiểm định XCG A4',
+    '7':   'Biên bản bàn giao xe mới',
+    '8':   'Giấy xác nhận quyền thụ hưởng Ngân hàng',
+}
 
-def classify_images(image_paths, items):
-    """Phân loại ảnh theo số nhóm đầu tên file (ví dụ: 1.1, 1.2, 2.1, 3.jpg).
+def normalize_bks(text):
+    """Trích biển số xe từ chuỗi người dùng nhập (VD: "14K-240.48")."""
+    if not text:
+        return ''
+    text = str(text).strip().upper()
+    m = re.search(r'\d{2}[A-Z]{1,2}-?\d{3,5}\.?\d*', text)
+    return m.group(0) if m else text
+
+def classify_images(image_paths, items=None):
+    """Phân loại ảnh theo tiền tố số đầu tên file (ví dụ: 1.1, 1.2, 2.1, 4.jpg).
+
+    Tên hạng mục (caption) lấy từ bảng DOC_TYPES định nghĩa sẵn trong dự án.
+    Tham số `items` cho phép truyền bảng tuỳ biến; bỏ trống thì dùng DOC_TYPES.
+
     Trả về dict {nhóm: [(path, caption, sort_key), ...]} sắp xếp theo tên file.
     """
+    items = DOC_TYPES if items is None else items
     classified = {}
     for path in image_paths:
         fname = os.path.basename(path)
         name_no_ext = os.path.splitext(fname)[0]
-        # Khớp key STT dạng thập phân ("1.2") lẫn số nguyên ("3", "4_001_pdf")
+        # Khớp key dạng thập phân ("1.2") lẫn số nguyên ("4", "4_001_pdf")
         m = re.match(r'^(\d+(?:\.\d+)?)', name_no_ext)
         if m:
-            key = m.group(1)            # "1.1", "2.2", "3", "4"...
+            key = m.group(1)            # "1.1", "2.2", "4"...
             nhom = int(float(key))      # nhóm số nguyên để chọn layout
             ten = items.get(key) or items.get(str(nhom))
             if not ten:
-                # Thiếu STT trong Excel: dùng tên của mục gần nhất phía trước cùng nhóm
+                # Tiền tố ngoài danh mục: dùng tên của mục gần nhất phía trước cùng nhóm
                 prev_keys = sorted(
                     (k for k in items if k.startswith(f'{nhom}.') and float(k) < float(key)),
                     key=float
@@ -324,14 +337,14 @@ def pdf_to_images(pdf_path, stt, tmp_dir):
     doc.close()
     return paths
 
-def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
+def main(logo_path, image_dir, output_path, bks='', gdv='', ngay=''):
     import tempfile
-    bks, items = read_gtx_excel(excel_path)
-    # Update output filename with actual BKS
+    bks = normalize_bks(bks)
+    # Gắn biển số vào tên file output
     if bks and 'GiamDinh_GiayToXe.pdf' in output_path:
-        output_path = output_path.replace('GiamDinh_GiayToXe.pdf', f'GiamDinh_GiayToXe_{bks}.pdf')
+        safe_bks = re.sub(r'[\/:*?"<>|]', '_', bks)
+        output_path = output_path.replace('GiamDinh_GiayToXe.pdf', f'GiamDinh_GiayToXe_{safe_bks}.pdf')
     print(f"Bien so xe: {bks}")
-    print(f"Danh muc: {items}")
 
     tmp_dir = tempfile.mkdtemp()
 
@@ -354,7 +367,7 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
         for f in all_files
         if f.lower().endswith(('.jpg', '.jpeg', '.png')) and 'logo' not in f.lower()
     ] + pdf_image_paths
-    classified = classify_images(image_paths, items)
+    classified = classify_images(image_paths)
     print(f"Phan loai anh: { {k: [x[2] for x in v] for k, v in classified.items()} }")
 
     logo_img = process_logo(logo_path, LOGO_PX)
@@ -426,10 +439,10 @@ def main(excel_path, logo_path, image_dir, output_path, gdv='', ngay=''):
 if __name__ == '__main__':
     BASE = r"d:\MCP\Claude Code\anh-giay-to-xe"
     main(
-        excel_path=os.path.join(BASE, "input", "GTX.xlsx"),
         logo_path=os.path.join(BASE, "assets", "logo-ptisos.png"),
         image_dir=os.path.join(BASE, "input"),
         output_path=os.path.join(BASE, "output", "GiamDinh_GiayToXe.pdf"),
+        bks="14K-240.48",
         gdv="Nguyễn Văn Hướng",
         ngay="14/07/2026"
     )

@@ -23,7 +23,6 @@ app = Flask(__name__, static_folder=None)
 # Phần mở rộng hợp lệ
 ALLOWED_IMG = {".jpg", ".jpeg", ".png"}
 ALLOWED_DOC = {".pdf"}
-ALLOWED_XLS = {".xlsx"}
 
 
 def safe_name(filename):
@@ -45,21 +44,28 @@ def health():
     return jsonify({"ok": True, "app": "gtx"})
 
 
+@app.route("/doc-types")
+def doc_types():
+    """Danh mục giấy tờ mặc định (tiền tố → tên hạng mục) cho giao diện."""
+    return jsonify({
+        "items": [
+            {"key": k, "name": v, "group": int(float(k))}
+            for k, v in gtx_gen.DOC_TYPES.items()
+        ]
+    })
+
+
 @app.route("/generate", methods=["POST"])
 def generate():
     images = request.files.getlist("images")
-    excel = request.files.get("excel")
+    bks = (request.form.get("bks") or "").strip()
     gdv = (request.form.get("gdv") or "").strip()
     ngay = (request.form.get("ngay") or "").strip()
 
-    if not excel:
-        return jsonify({"error": "Thiếu file Excel GTX (.xlsx)."}), 400
+    if not bks:
+        return jsonify({"error": "Thiếu biển số xe."}), 400
     if not images:
         return jsonify({"error": "Chưa chọn ảnh hoặc file PDF giấy tờ nào."}), 400
-
-    ext = os.path.splitext(excel.filename)[1].lower()
-    if ext not in ALLOWED_XLS:
-        return jsonify({"error": "File Excel phải có định dạng .xlsx."}), 400
 
     work = tempfile.mkdtemp(prefix="gtx_")
     in_dir = os.path.join(work, "input")
@@ -68,10 +74,6 @@ def generate():
     os.makedirs(out_dir, exist_ok=True)
 
     try:
-        # Lưu Excel
-        excel_path = os.path.join(in_dir, "GTX.xlsx")
-        excel.save(excel_path)
-
         # Lưu ảnh + PDF, giữ nguyên tên để phân loại nhóm
         saved = 0
         for f in images:
@@ -88,16 +90,16 @@ def generate():
 
         output_path = os.path.join(out_dir, "GiamDinh_GiayToXe.pdf")
         result = gtx_gen.main(
-            excel_path=excel_path,
             logo_path=LOGO_PATH,
             image_dir=in_dir,
             output_path=output_path,
+            bks=bks,
             gdv=gdv,
             ngay=ngay,
         )
 
         if not result or not os.path.exists(result):
-            return jsonify({"error": "Không tạo được PDF — kiểm tra lại tên file ảnh và nội dung Excel."}), 500
+            return jsonify({"error": "Không tạo được PDF — kiểm tra lại tên file ảnh (phải bắt đầu bằng tiền tố số, VD 1.1.jpg)."}), 500
 
         # Đọc PDF vào bộ nhớ để có thể xóa thư mục tạm an toàn trước khi stream
         download_name = os.path.basename(result)

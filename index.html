@@ -98,7 +98,6 @@
   .chip .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .chip .rm { cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; padding: 2px 4px; border: none; background: none; }
   .chip .rm:hover { color: var(--danger); }
-  .chip.xls .grp { background: rgba(30,142,90,.16); color: var(--ok); }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 9px;
@@ -149,7 +148,7 @@
     <div class="logo-badge">🚗</div>
     <div>
       <h1>Ghép ảnh Giám định Giấy tờ xe (GTX)</h1>
-      <p>Tải ảnh giấy tờ + Excel GTX → tạo PDF giám định chuẩn PTI SOS ngay trên trình duyệt</p>
+      <p>Tải ảnh giấy tờ → tạo PDF giám định chuẩn PTI SOS ngay trên trình duyệt</p>
     </div>
   </div>
 </header>
@@ -173,7 +172,7 @@ python app.py</code></pre>
     <!-- Upload ảnh -->
     <div class="card">
       <h2>1. Ảnh &amp; PDF giấy tờ</h2>
-      <p class="sub">Đặt tên file theo nhóm: <code>1.1.jpg</code>, <code>1.2.jpg</code>, <code>2.1.jpg</code>, <code>4.pdf</code>… Số đầu quyết định layout trang.</p>
+      <p class="sub">Đặt tên file theo tiền tố danh mục: <code>1.1.jpg</code>, <code>1.2.jpg</code>, <code>2.1.jpg</code>, <code>4.pdf</code>… Tiền tố quyết định caption và layout trang (xem bảng danh mục bên dưới).</p>
       <div class="drop" id="dropImg">
         <div class="ico">📎</div>
         <div class="t">Kéo thả hoặc bấm để chọn ảnh / PDF</div>
@@ -183,19 +182,15 @@ python app.py</code></pre>
       <div class="files" id="imgList"></div>
     </div>
 
-    <!-- Upload excel + thông tin -->
+    <!-- Thông tin giám định -->
     <div class="card">
-      <h2>2. File Excel GTX &amp; thông tin</h2>
-      <p class="sub">File <code>.xlsx</code> chứa biển số xe và danh mục giấy tờ.</p>
-      <div class="drop" id="dropXls">
-        <div class="ico">📊</div>
-        <div class="t">Chọn file GTX.xlsx</div>
-        <div class="h">Chấp nhận .xlsx</div>
+      <h2>2. Thông tin giám định</h2>
+      <p class="sub">Biển số xe hiển thị trên tiêu đề từng trang và dùng cho tên file PDF.</p>
+      <div style="margin-bottom:18px">
+        <label class="fld" for="bks">Biển số xe <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="bks" placeholder="VD: 14K-240.48" autocomplete="off">
       </div>
-      <input type="file" id="xlsInput" accept=".xlsx">
-      <div class="files" id="xlsList"></div>
-
-      <div class="row" style="margin-top:20px">
+      <div class="row">
         <div>
           <label class="fld" for="gdv">Giám định viên</label>
           <input type="text" id="gdv" placeholder="VD: Nguyễn Văn Hướng">
@@ -231,16 +226,14 @@ python app.py</code></pre>
 
   <!-- Hướng dẫn -->
   <div class="card">
-    <details class="help">
-      <summary>📖 Quy tắc đặt tên &amp; layout</summary>
+    <details class="help" open>
+      <summary>📖 Danh mục tiền tố mặc định</summary>
+      <p class="sub" style="margin-bottom:12px">Tên file ảnh phải bắt đầu bằng tiền tố dưới đây — caption và layout trang được gán tự động.</p>
       <div class="table-scroll">
         <table>
-          <thead><tr><th>Nhóm</th><th>Tên file</th><th>Định dạng</th><th>Số ảnh/trang</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td>1.1, 1.2, 1.3…</td><td>A4 Ngang</td><td>4 (2×2)</td></tr>
-            <tr><td>2</td><td>2.1, 2.2…</td><td>A4 Dọc</td><td>2 (1×2)</td></tr>
-            <tr><td>3</td><td>3.1, 3.2…</td><td>A4 Dọc</td><td>4 (2×2)</td></tr>
-            <tr><td>4, 5, 6…</td><td>4.jpg, 5.pdf…</td><td>A4 Dọc</td><td>1 / trang</td></tr>
+          <thead><tr><th>Tiền tố</th><th>Tên hạng mục</th><th>Layout</th></tr></thead>
+          <tbody id="docTypesBody">
+            <tr><td colspan="3" style="color:var(--muted)">Đang tải danh mục…</td></tr>
           </tbody>
         </table>
       </div>
@@ -255,9 +248,7 @@ python app.py</code></pre>
 
 <script>
   const imgInput = document.getElementById('imgInput');
-  const xlsInput = document.getElementById('xlsInput');
   const imgList  = document.getElementById('imgList');
-  const xlsList  = document.getElementById('xlsList');
   const form     = document.getElementById('form');
   const errBox   = document.getElementById('errBox');
   const genBtn   = document.getElementById('genBtn');
@@ -268,6 +259,52 @@ python app.py</code></pre>
   const dlLink   = document.getElementById('dlLink');
   const outName  = document.getElementById('outName');
   const resetBtn = document.getElementById('resetBtn');
+
+  // Danh mục tiền tố mặc định — khớp DOC_TYPES trong gtx_gen.py.
+  // Dùng làm bản dự phòng khi không gọi được /doc-types (mở file tĩnh).
+  const DOC_TYPES_FALLBACK = {
+    '1.1': 'Đăng ký xe mặt trước',
+    '1.2': 'Đăng ký xe mặt sau',
+    '1.3': 'Bằng lái mặt trước',
+    '1.4': 'Bằng lái mặt sau',
+    '1.5': 'Căn cước công dân lái xe',
+    '1.6': 'Căn cước công dân lái xe',
+    '2.1': 'Giấy chứng nhận đăng kiểm A5 mặt trước',
+    '2.2': 'Giấy chứng nhận đăng kiểm A5 mặt sau',
+    '2.3': 'Giấy chứng nhận bảo hiểm A5 mặt trước',
+    '2.4': 'Giấy chứng nhận bảo hiểm A5 mặt sau',
+    '3.1': 'Xác minh bằng lái',
+    '3.2': 'Xác minh bằng lái',
+    '3.3': 'Xác minh bằng lái',
+    '3.4': 'Xác minh bằng lái',
+    '3.5': 'Xác minh bằng lái',
+    '3.6': 'Xác minh bằng lái',
+    '4':   'Giấy chứng nhận bảo hiểm A4',
+    '5':   'Xác minh thanh toán phí bảo hiểm',
+    '6':   'Giấy chứng nhận kiểm định XCG A4',
+    '7':   'Biên bản bàn giao xe mới',
+    '8':   'Giấy xác nhận quyền thụ hưởng Ngân hàng',
+  };
+  let DOC_TYPES = Object.assign({}, DOC_TYPES_FALLBACK);
+
+  // Layout theo nhóm (số nguyên đầu của tiền tố) — khớp logic trong gtx_gen.py
+  function layoutOf(group){
+    if (group === 1) return '4 ảnh/trang · A4 ngang';
+    if (group === 2) return '2 ảnh/trang · A4 dọc';
+    if (group === 3) return '4 ảnh/trang · A4 dọc';
+    return '1 ảnh/trang · A4 dọc';
+  }
+
+  function renderDocTypes(){
+    const body = document.getElementById('docTypesBody');
+    const keys = Object.keys(DOC_TYPES).sort((a,b) => parseFloat(a) - parseFloat(b));
+    body.innerHTML = keys.map(k => {
+      const g = parseInt(k, 10);
+      return '<tr><td><code>' + k + '</code></td><td>' + DOC_TYPES[k]
+           + '</td><td style="color:var(--muted)">' + layoutOf(g) + '</td></tr>';
+    }).join('');
+  }
+  renderDocTypes();
 
   function setTodayDate(){
     const d = new Date();
@@ -281,11 +318,9 @@ python app.py</code></pre>
   // Làm mới toàn bộ form sau khi hoàn tất 1 tác vụ, sẵn sàng cho hồ sơ tiếp theo
   function resetForm(){
     imgFiles = [];
-    xlsFile = null;
     imgInput.value = '';
-    xlsInput.value = '';
     renderImgs();
-    renderXls();
+    document.getElementById('bks').value = '';
     document.getElementById('gdv').value = '';
     setTodayDate();
     clearErr();
@@ -306,12 +341,22 @@ python app.py</code></pre>
       if (!j || j.app !== 'gtx') throw new Error('not gtx');
     } catch(_) {
       document.getElementById('wrongServer').style.display = 'block';
+      return;
     }
+    // Lấy danh mục tiền tố trực tiếp từ server để luôn khớp gtx_gen.py
+    try {
+      const r = await fetch('/doc-types', { cache: 'no-store' });
+      const j = await r.json();
+      if (j && Array.isArray(j.items) && j.items.length) {
+        DOC_TYPES = {};
+        j.items.forEach(function(it){ DOC_TYPES[it.key] = it.name; });
+        renderDocTypes();
+        renderImgs();
+      }
+    } catch(_) {}
   })();
 
-  // Lưu file bằng DataTransfer để có thể xóa từng file
   let imgFiles = [];
-  let xlsFile  = null;
 
   function groupOf(name){
     const m = name.match(/^(\d+(?:\.\d+)?)/);
@@ -322,27 +367,21 @@ python app.py</code></pre>
     imgList.innerHTML = '';
     imgFiles.forEach((f, i) => {
       const g = groupOf(f.name);
+      const ten = g ? DOC_TYPES[g] : null;
+      const known = !!ten;
+      const nhan = known
+        ? ' <span style="color:var(--muted)">\u2014 ' + ten + '</span>'
+        : ' <span style="color:var(--danger)">\u2014 ti\u1ec1n t\u1ed1 kh\u00f4ng c\u00f3 trong danh m\u1ee5c</span>';
       const chip = document.createElement('div');
       chip.className = 'chip';
       chip.innerHTML =
-        `<span class="grp ${g?'':'warn'}">${g ? 'Nhóm '+parseInt(g,10) : '?'}</span>`
-        + `<span class="nm">${f.name}</span>`
-        + `<button type="button" class="rm" data-i="${i}" title="Bỏ">×</button>`;
+        '<span class="grp ' + (known ? '' : 'warn') + '">' + (g || '?') + '</span>'
+        + '<span class="nm">' + f.name + nhan + '</span>'
+        + '<button type="button" class="rm" data-i="' + i + '" title="B\u1ecf">\u00d7</button>';
       imgList.appendChild(chip);
     });
     imgList.querySelectorAll('.rm').forEach(b =>
       b.onclick = () => { imgFiles.splice(+b.dataset.i, 1); renderImgs(); });
-  }
-
-  function renderXls(){
-    xlsList.innerHTML = '';
-    if (!xlsFile) return;
-    const chip = document.createElement('div');
-    chip.className = 'chip xls';
-    chip.innerHTML = `<span class="grp">XLSX</span><span class="nm">${xlsFile.name}</span>`
-      + `<button type="button" class="rm" title="Bỏ">×</button>`;
-    chip.querySelector('.rm').onclick = () => { xlsFile = null; xlsInput.value=''; renderXls(); };
-    xlsList.appendChild(chip);
   }
 
   function addImgs(fileList){
@@ -356,9 +395,7 @@ python app.py</code></pre>
 
   // Bấm chọn
   document.getElementById('dropImg').onclick = () => imgInput.click();
-  document.getElementById('dropXls').onclick = () => xlsInput.click();
   imgInput.onchange = () => addImgs(imgInput.files);
-  xlsInput.onchange = () => { if (xlsInput.files[0]) { xlsFile = xlsInput.files[0]; renderXls(); } };
 
   // Kéo thả
   function wireDrop(el, handler){
@@ -367,10 +404,6 @@ python app.py</code></pre>
     el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drag'); handler(e.dataTransfer.files); });
   }
   wireDrop(document.getElementById('dropImg'), addImgs);
-  wireDrop(document.getElementById('dropXls'), fl => {
-    const f = [...fl].find(x => /\.xlsx$/i.test(x.name));
-    if (f) { xlsFile = f; renderXls(); }
-  });
 
   function showErr(msg){ errBox.textContent = msg; errBox.classList.add('err'); errBox.style.display='block'; }
   function clearErr(){ errBox.style.display='none'; }
@@ -384,12 +417,13 @@ python app.py</code></pre>
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearErr();
-    if (!xlsFile) return showErr('Vui lòng chọn file Excel GTX (.xlsx).');
+    const bks = document.getElementById('bks').value.trim();
+    if (!bks) return showErr('Vui lòng nhập biển số xe.');
     if (imgFiles.length === 0) return showErr('Vui lòng chọn ít nhất một ảnh hoặc PDF giấy tờ.');
 
     const fd = new FormData();
     imgFiles.forEach(f => fd.append('images', f, f.name));
-    fd.append('excel', xlsFile, xlsFile.name);
+    fd.append('bks', bks);
     fd.append('gdv', document.getElementById('gdv').value.trim());
     fd.append('ngay', document.getElementById('ngay').value.trim());
 

@@ -1,5 +1,4 @@
 Pillow
-openpyxl
 reportlab
 numpy
 PyMuPDF
