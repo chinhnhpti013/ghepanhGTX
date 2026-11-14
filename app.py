@@ -5,6 +5,7 @@ Chạy:  python app.py
 Mở:    http://127.0.0.1:5000
 """
 import io
+import json
 import os
 import re
 import shutil
@@ -46,11 +47,17 @@ def health():
 
 @app.route("/doc-types")
 def doc_types():
-    """Danh mục giấy tờ mặc định (tiền tố → tên hạng mục) cho giao diện."""
+    """Danh mục giấy tờ (tiền tố → tên hạng mục) cho giao diện.
+
+    Nguồn: BUILTIN_DOC_TYPES trong gtx_gen.py, ghi đè bởi doc_types.json.
+    Hạng mục người dùng tự thêm trên web KHÔNG nằm ở đây — chúng được lưu tại
+    trình duyệt và gửi kèm mỗi lần tạo PDF qua trường "extra".
+    """
+    items = gtx_gen.DOC_TYPES
     return jsonify({
         "items": [
-            {"key": k, "name": v, "group": int(float(k))}
-            for k, v in gtx_gen.DOC_TYPES.items()
+            {"key": k, "name": items[k], "group": int(float(k))}
+            for k in gtx_gen.sort_keys(items)
         ]
     })
 
@@ -59,6 +66,7 @@ def doc_types():
 def generate():
     images = request.files.getlist("images")
     bks = (request.form.get("bks") or "").strip()
+    extra_raw = (request.form.get("extra") or "").strip()
     gdv = (request.form.get("gdv") or "").strip()
     ngay = (request.form.get("ngay") or "").strip()
 
@@ -66,6 +74,17 @@ def generate():
         return jsonify({"error": "Thiếu biển số xe."}), 400
     if not images:
         return jsonify({"error": "Chưa chọn ảnh hoặc file PDF giấy tờ nào."}), 400
+
+    # Hạng mục người dùng tự thêm trên giao diện (JSON {"tiền tố": "tên"}).
+    # gtx_gen.clean_doc_types() sẽ lọc lại lần nữa, đây chỉ là bước parse.
+    extra_doc_types = {}
+    if extra_raw:
+        try:
+            parsed = json.loads(extra_raw)
+            if isinstance(parsed, dict):
+                extra_doc_types = parsed
+        except ValueError:
+            return jsonify({"error": "Danh sách hạng mục bổ sung không hợp lệ."}), 400
 
     work = tempfile.mkdtemp(prefix="gtx_")
     in_dir = os.path.join(work, "input")
@@ -96,6 +115,7 @@ def generate():
             bks=bks,
             gdv=gdv,
             ngay=ngay,
+            extra_doc_types=extra_doc_types,
         )
 
         if not result or not os.path.exists(result):

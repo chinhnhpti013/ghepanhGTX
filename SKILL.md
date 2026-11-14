@@ -3,7 +3,8 @@
 ## Mô tả
 
 Script `gtx_gen.py` tạo PDF giám định giấy tờ xe PTI từ ảnh JPG/PNG và file PDF giấy tờ.
-Caption lấy từ bảng danh mục `DOC_TYPES` định nghĩa sẵn trong script (không dùng file Excel).
+Caption lấy từ danh mục `doc_types.json` (không dùng file Excel). Danh mục bổ sung được
+bằng 3 cách: sửa `doc_types.json`, ô "Thêm hạng mục" trên web, hoặc tham số `--them`.
 Biển số xe, giám định viên, ngày giám định do người dùng nhập.
 
 ---
@@ -38,6 +39,7 @@ anh-giay-to-xe\
   output\
     GiamDinh_GiayToXe_{BKS}.pdf   # Output
   gtx_gen.py            # Script chinh
+  doc_types.json        # Danh muc tien to -> ten hang muc (sua de bo sung)
   app.py                # Web server Flask
   index.html            # Giao dien web
 ```
@@ -63,7 +65,8 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyen Van Huong" --ngay "14/11/2026
 ```
 
 Tham so: `--images` (mac dinh `input\`), `--logo` (mac dinh `assets\logo-ptisos.png`),
-`--out` (mac dinh `output\GiamDinh_GiayToXe.pdf`), `--bks`, `--gdv`, `--ngay`.
+`--out` (mac dinh `output\GiamDinh_GiayToXe.pdf`), `--bks`, `--gdv`, `--ngay`,
+`--them TIENTO=TEN` (bo sung hang muc, lap lai duoc).
 Xem day du: `python gtx_gen.py --help`.
 
 ---
@@ -89,7 +92,16 @@ Xem day du: `python gtx_gen.py --help`.
 | 7 | Bien ban ban giao xe moi | 1 anh/trang · A4 doc |
 | 8 | Giay xac nhan quyen thu huong Ngan hang | 1 anh/trang · A4 doc |
 
-Them/sua hang muc: chinh `DOC_TYPES` trong `gtx_gen.py` (va `DOC_TYPES_FALLBACK` trong `index.html`).
+### Bo sung hang muc — 3 cach
+
+| Cach | Pham vi | Lam the nao |
+|------|---------|-------------|
+| `doc_types.json` | Toan du an | Them dong vao muc `items`, restart server |
+| O "Them hang muc" tren web | Rieng trinh duyet do | Nhap Tien to + Ten, bam "+ Them hang muc" (luu localStorage) |
+| `--them` khi chay script | Mot lan chay | `--them "9=Bien ban hien truong"` (lap lai duoc) |
+
+Tien to hop le: `9` hoac `3.7`. Chu so dau = nhom, quyet dinh layout.
+Trung tien to co san -> ten moi ghi de ten cu.
 
 ---
 
@@ -108,6 +120,8 @@ Them/sua hang muc: chinh `DOC_TYPES` trong `gtx_gen.py` (va `DOC_TYPES_FALLBACK`
 | Bien so xe | Doc tu Excel | Nguoi dung nhap (`--bks` / o tren web) | 2026-11-14 |
 | CLI | Sua tay block `__main__` | Tham so `--images/--logo/--out/--bks/--gdv/--ngay` | 2026-11-14 |
 | Goi skill `.skill` | Code dan inline trong SKILL.md | Bundle `scripts/gtx_gen.py` + `fonts/` | 2026-11-14 |
+| O Ngay giam dinh | `<input type=text>` | `<input type=date>` + nut "Hom nay" | 2026-11-14 |
+| Danh muc tien to | Hard-code trong `gtx_gen.py` | `doc_types.json` + them tren web + `--them` | 2026-11-14 |
 
 ---
 

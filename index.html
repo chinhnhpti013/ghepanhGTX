@@ -100,6 +100,31 @@
   .btn-today:hover { border-color: var(--blue); color: var(--blue); background: rgba(0,112,192,.08); }
   .btn-today.active { border-color: var(--blue); color: #fff; background: var(--blue); }
 
+  /* Thêm hạng mục vào danh mục tiền tố */
+  .add-row { display: flex; gap: 8px; align-items: stretch; margin-top: 14px; flex-wrap: wrap; }
+  .add-row input[type=text] { width: auto; }
+  .add-row .k { flex: 0 0 110px; }
+  .add-row .n { flex: 1; min-width: 180px; }
+  .btn-add {
+    flex-shrink: 0; padding: 0 18px; border: 1px solid var(--blue); border-radius: 9px;
+    background: var(--blue); color: #fff; font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer; white-space: nowrap;
+  }
+  .btn-add:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+  .tag-new {
+    font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 20px; margin-left: 7px;
+    background: rgba(30,142,90,.16); color: var(--ok); white-space: nowrap;
+  }
+  .rm-row {
+    border: none; background: none; cursor: pointer; color: var(--muted);
+    font-size: 15px; line-height: 1; padding: 0 4px;
+  }
+  .rm-row:hover { color: var(--danger); }
+  .add-msg { font-size: 13px; margin-top: 9px; display: none; }
+  .add-msg.show { display: block; }
+  .add-msg.bad { color: var(--danger); }
+  .add-msg.good { color: var(--ok); }
+
   /* File chips */
   .files { margin-top: 14px; display: flex; flex-direction: column; gap: 7px; }
   .chip {
@@ -246,16 +271,29 @@ python app.py</code></pre>
   <!-- Hướng dẫn -->
   <div class="card">
     <details class="help" open>
-      <summary>📖 Danh mục tiền tố mặc định</summary>
+      <summary>📖 Danh mục tiền tố</summary>
       <p class="sub" style="margin-bottom:12px">Tên file ảnh phải bắt đầu bằng tiền tố dưới đây — caption và layout trang được gán tự động.</p>
       <div class="table-scroll">
         <table>
-          <thead><tr><th>Tiền tố</th><th>Tên hạng mục</th><th>Layout</th></tr></thead>
+          <thead><tr><th>Tiền tố</th><th>Tên hạng mục</th><th>Layout</th><th style="width:34px"></th></tr></thead>
           <tbody id="docTypesBody">
-            <tr><td colspan="3" style="color:var(--muted)">Đang tải danh mục…</td></tr>
+            <tr><td colspan="4" style="color:var(--muted)">Đang tải danh mục…</td></tr>
           </tbody>
         </table>
       </div>
+
+      <div class="add-row">
+        <input type="text" class="k" id="newKey" placeholder="Tiền tố" autocomplete="off" inputmode="decimal">
+        <input type="text" class="n" id="newName" placeholder="Tên hạng mục" autocomplete="off">
+        <button type="button" class="btn-add" id="addTypeBtn">+ Thêm hạng mục</button>
+      </div>
+      <div class="add-msg" id="addMsg"></div>
+      <p class="sub" style="margin:10px 0 0; font-size:12.5px">
+        Hạng mục tự thêm được lưu trên trình duyệt này và áp dụng cho mọi lần tạo PDF sau đó.
+        Tiền tố dạng <code>9</code> hoặc <code>3.7</code> — chữ số đầu quyết định layout:
+        1 = A4 ngang 4 ảnh/trang · 2 = A4 dọc 2 ảnh · 3 = A4 dọc 4 ảnh · từ 4 trở lên = A4 dọc 1 ảnh/trang.
+        Trùng tiền tố có sẵn thì tên mới sẽ thay tên cũ.
+      </p>
     </details>
   </div>
 
@@ -304,7 +342,39 @@ python app.py</code></pre>
     '7':   'Biên bản bàn giao xe mới',
     '8':   'Giấy xác nhận quyền thụ hưởng Ngân hàng',
   };
-  let DOC_TYPES = Object.assign({}, DOC_TYPES_FALLBACK);
+  // Danh mục gốc (từ server hoặc bản dự phòng) — KHÔNG sửa trực tiếp
+  let BASE_TYPES = Object.assign({}, DOC_TYPES_FALLBACK);
+
+  // Hạng mục người dùng tự thêm, lưu trên trình duyệt này
+  const EXTRA_KEY = 'gtx_extra_doc_types';
+  let EXTRA_TYPES = loadExtra();
+
+  // Danh mục hiệu lực = gốc + tự thêm (tự thêm ghi đè khi trùng tiền tố)
+  let DOC_TYPES = {};
+
+  function loadExtra(){
+    try {
+      const raw = localStorage.getItem(EXTRA_KEY);
+      const o = raw ? JSON.parse(raw) : {};
+      return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+    } catch(_) { return {}; }
+  }
+
+  function saveExtra(){
+    try { localStorage.setItem(EXTRA_KEY, JSON.stringify(EXTRA_TYPES)); } catch(_) {}
+  }
+
+  // Tiền tố hợp lệ: "9" hoặc "3.7" — khớp KEY_RE trong gtx_gen.py
+  function validKey(k){ return /^\d{1,3}(\.\d{1,3})?$/.test(k); }
+
+  // Sắp xếp theo số: 1.1 < 1.2 < 1.10 < 2 < 10
+  function sortKeys(keys){
+    const pair = k => { const [a, b] = k.split('.'); return [parseInt(a,10), b ? parseInt(b,10) : 0]; };
+    return keys.slice().sort((x, y) => {
+      const [ax, bx] = pair(x), [ay, by] = pair(y);
+      return ax - ay || bx - by;
+    });
+  }
 
   // Layout theo nhóm (số nguyên đầu của tiền tố) — khớp logic trong gtx_gen.py
   function layoutOf(group){
@@ -314,15 +384,67 @@ python app.py</code></pre>
     return '1 ảnh/trang · A4 dọc';
   }
 
-  function renderDocTypes(){
-    const body = document.getElementById('docTypesBody');
-    const keys = Object.keys(DOC_TYPES).sort((a,b) => parseFloat(a) - parseFloat(b));
-    body.innerHTML = keys.map(k => {
-      const g = parseInt(k, 10);
-      return '<tr><td><code>' + k + '</code></td><td>' + DOC_TYPES[k]
-           + '</td><td style="color:var(--muted)">' + layoutOf(g) + '</td></tr>';
-    }).join('');
+  function esc(t){
+    return String(t).replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
+  function renderDocTypes(){
+    DOC_TYPES = Object.assign({}, BASE_TYPES, EXTRA_TYPES);
+    const body = document.getElementById('docTypesBody');
+    body.innerHTML = sortKeys(Object.keys(DOC_TYPES)).map(k => {
+      const g = parseInt(k, 10);
+      const own = Object.prototype.hasOwnProperty.call(EXTRA_TYPES, k);
+      return '<tr><td><code>' + esc(k) + '</code></td>'
+           + '<td>' + esc(DOC_TYPES[k]) + (own ? '<span class="tag-new">tự thêm</span>' : '') + '</td>'
+           + '<td style="color:var(--muted)">' + layoutOf(g) + '</td>'
+           + '<td>' + (own
+               ? '<button type="button" class="rm-row" data-k="' + esc(k) + '" title="Bỏ hạng mục này">×</button>'
+               : '') + '</td></tr>';
+    }).join('');
+    body.querySelectorAll('.rm-row').forEach(b => {
+      b.onclick = () => {
+        delete EXTRA_TYPES[b.dataset.k];
+        saveExtra();
+        renderDocTypes();
+        renderImgs();
+        showAddMsg('Đã bỏ hạng mục ' + b.dataset.k + '.', true);
+      };
+    });
+  }
+
+  const newKey    = document.getElementById('newKey');
+  const newName   = document.getElementById('newName');
+  const addMsg    = document.getElementById('addMsg');
+  const addTypeBtn = document.getElementById('addTypeBtn');
+
+  function showAddMsg(text, ok){
+    addMsg.textContent = text;
+    addMsg.className = 'add-msg show ' + (ok ? 'good' : 'bad');
+  }
+
+  function addDocType(){
+    const k = newKey.value.trim().replace(',', '.');
+    const n = newName.value.trim().replace(/\s+/g, ' ');
+    if (!validKey(k)) return showAddMsg('Tiền tố phải là số dạng 9 hoặc 3.7.', false);
+    if (!n)           return showAddMsg('Chưa nhập tên hạng mục.', false);
+    if (n.length > 200) return showAddMsg('Tên hạng mục quá dài (tối đa 200 ký tự).', false);
+
+    const thay = Object.prototype.hasOwnProperty.call(BASE_TYPES, k)
+              || Object.prototype.hasOwnProperty.call(EXTRA_TYPES, k);
+    EXTRA_TYPES[k] = n;
+    saveExtra();
+    renderDocTypes();
+    renderImgs();
+    newKey.value = ''; newName.value = ''; newKey.focus();
+    showAddMsg((thay ? 'Đã thay tên hạng mục ' : 'Đã thêm hạng mục ') + k + ': ' + n, true);
+  }
+
+  addTypeBtn.onclick = addDocType;
+  [newKey, newName].forEach(el => el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addDocType(); }
+  }));
+
   renderDocTypes();
 
   // <input type="date"> dùng định dạng ISO yyyy-mm-dd, còn PDF cần dd/mm/yyyy
@@ -392,8 +514,8 @@ python app.py</code></pre>
       const r = await fetch('/doc-types', { cache: 'no-store' });
       const j = await r.json();
       if (j && Array.isArray(j.items) && j.items.length) {
-        DOC_TYPES = {};
-        j.items.forEach(function(it){ DOC_TYPES[it.key] = it.name; });
+        BASE_TYPES = {};
+        j.items.forEach(function(it){ BASE_TYPES[it.key] = it.name; });
         renderDocTypes();
         renderImgs();
       }
@@ -470,6 +592,7 @@ python app.py</code></pre>
     fd.append('bks', bks);
     fd.append('gdv', document.getElementById('gdv').value.trim());
     fd.append('ngay', ngayVN());
+    if (Object.keys(EXTRA_TYPES).length) fd.append('extra', JSON.stringify(EXTRA_TYPES));
 
     setLoading(true);
     try {

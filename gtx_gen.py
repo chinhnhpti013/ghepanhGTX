@@ -70,16 +70,21 @@ def process_logo(logo_path, size_px):
     return Image.fromarray(data).resize((size_px, size_px), Image.LANCZOS)
 
 # ---------------------------------------------------------------------------
-# Danh mục giấy tờ mặc định của dự án (thay cho file Excel GTX trước đây).
+# Danh mục giấy tờ của dự án (thay cho file Excel GTX trước đây).
 # Key = tiền tố số ở đầu tên file ảnh; value = tên hạng mục dùng làm caption.
 # Nhóm (số nguyên đầu tiên của key) quyết định layout trang:
 #   nhóm 1 → A4 ngang 4 ảnh/trang (2×2)
 #   nhóm 2 → A4 dọc  2 ảnh/trang (1×2)
 #   nhóm 3 → A4 dọc  4 ảnh/trang (2×2)
 #   nhóm ≥ 4 → A4 dọc 1 ảnh/trang
-# Thêm/sửa hạng mục chỉ cần chỉnh bảng này, không cần sửa code bên dưới.
+#
+# CÓ 3 CÁCH BỔ SUNG HẠNG MỤC, ưu tiên từ thấp đến cao:
+#   1. BUILTIN_DOC_TYPES dưới đây — bản dự phòng, dùng khi thiếu doc_types.json
+#   2. doc_types.json cạnh file này — danh mục chính thức, sửa bằng trình soạn thảo
+#   3. Tham số extra_doc_types khi gọi main() — hạng mục thêm tại chỗ cho một lần
+#      chạy (giao diện web gửi lên từ ô "Thêm hạng mục")
 # ---------------------------------------------------------------------------
-DOC_TYPES = {
+BUILTIN_DOC_TYPES = {
     '1.1': 'Đăng ký xe mặt trước',
     '1.2': 'Đăng ký xe mặt sau',
     '1.3': 'Bằng lái mặt trước',
@@ -102,6 +107,62 @@ DOC_TYPES = {
     '7':   'Biên bản bàn giao xe mới',
     '8':   'Giấy xác nhận quyền thụ hưởng Ngân hàng',
 }
+
+DOC_TYPES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'doc_types.json')
+
+KEY_RE = re.compile(r'^\d{1,3}(\.\d{1,3})?$')
+MAX_NAME_LEN = 200
+MAX_ITEMS = 300
+
+def clean_doc_types(raw):
+    """Lọc một dict tiền tố → tên hạng mục, bỏ qua mục không hợp lệ.
+
+    Hợp lệ: key dạng "4" hoặc "3.7" (tối đa 3 chữ số mỗi phần), tên là chuỗi
+    không rỗng. Dùng chung cho cả doc_types.json lẫn dữ liệu người dùng gửi từ
+    web, nên luôn cắt độ dài tên và giới hạn số lượng mục.
+    """
+    out = {}
+    if not isinstance(raw, dict):
+        return out
+    for k, v in raw.items():
+        if len(out) >= MAX_ITEMS:
+            break
+        k = str(k).strip()
+        if not KEY_RE.match(k) or not isinstance(v, str):
+            continue
+        v = ' '.join(v.split())[:MAX_NAME_LEN]
+        if v:
+            out[k] = v
+    return out
+
+def load_doc_types(path=None):
+    """Nạp danh mục: BUILTIN_DOC_TYPES, rồi ghi đè bằng doc_types.json nếu có."""
+    import json
+    items = dict(BUILTIN_DOC_TYPES)
+    path = path or DOC_TYPES_FILE
+    try:
+        with io.open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except FileNotFoundError:
+        return items
+    except Exception as e:
+        print(f"Canh bao: khong doc duoc {path} ({e}) - dung danh muc mac dinh.")
+        return items
+    # Chấp nhận cả {"items": {...}} lẫn dict phẳng {...}
+    raw = data.get('items') if isinstance(data, dict) and 'items' in data else data
+    found = clean_doc_types(raw)
+    if found:
+        items.update(found)
+    return items
+
+def sort_keys(keys):
+    """Sắp xếp tiền tố theo số: 1.1 < 1.2 < 1.10 < 2 < 10."""
+    def as_pair(k):
+        a, _, b = k.partition('.')
+        return (int(a), int(b) if b else 0)
+    return sorted(keys, key=as_pair)
+
+DOC_TYPES = load_doc_types()
 
 def normalize_bks(text):
     """Trích biển số xe từ chuỗi người dùng nhập (VD: "14K-240.48")."""
@@ -337,9 +398,15 @@ def pdf_to_images(pdf_path, stt, tmp_dir):
     doc.close()
     return paths
 
-def main(logo_path, image_dir, output_path, bks='', gdv='', ngay=''):
+def main(logo_path, image_dir, output_path, bks='', gdv='', ngay='', extra_doc_types=None):
     import tempfile
     bks = normalize_bks(bks)
+    # Danh mục dùng cho lần chạy này = doc_types.json + hạng mục bổ sung tại chỗ
+    items = dict(DOC_TYPES)
+    extra = clean_doc_types(extra_doc_types or {})
+    if extra:
+        items.update(extra)
+        print(f"Hang muc bo sung: {extra}")
     # Gắn biển số vào tên file output
     if bks and 'GiamDinh_GiayToXe.pdf' in output_path:
         safe_bks = re.sub(r'[\/:*?"<>|]', '_', bks)
@@ -367,7 +434,7 @@ def main(logo_path, image_dir, output_path, bks='', gdv='', ngay=''):
         for f in all_files
         if f.lower().endswith(('.jpg', '.jpeg', '.png')) and 'logo' not in f.lower()
     ] + pdf_image_paths
-    classified = classify_images(image_paths)
+    classified = classify_images(image_paths, items)
     print(f"Phan loai anh: { {k: [x[2] for x in v] for k, v in classified.items()} }")
 
     logo_img = process_logo(logo_path, LOGO_PX)
@@ -452,7 +519,17 @@ if __name__ == '__main__':
     ap.add_argument('--bks', default='', help='Biển số xe, VD: 14K-240.48')
     ap.add_argument('--gdv', default='', help='Tên giám định viên')
     ap.add_argument('--ngay', default='', help='Ngày giám định, dd/mm/yyyy')
+    ap.add_argument('--them', action='append', default=[], metavar='TIENTO=TEN',
+                    help='Bổ sung hạng mục cho lần chạy này, lặp lại được. '
+                         'VD: --them "3.7=Xác minh bằng lái" --them "9=Biên bản hiện trường"')
     a = ap.parse_args()
+
+    extra = {}
+    for item in a.them:
+        k, sep, v = item.partition('=')
+        if not sep:
+            ap.error(f'--them phải có dạng TIENTO=TEN, nhận được: {item!r}')
+        extra[k.strip()] = v.strip()
 
     main(
         logo_path=a.logo,
@@ -461,4 +538,5 @@ if __name__ == '__main__':
         bks=a.bks,
         gdv=a.gdv,
         ngay=a.ngay,
+        extra_doc_types=extra,
     )

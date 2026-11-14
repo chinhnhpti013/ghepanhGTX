@@ -3,8 +3,8 @@
 ## Mục đích
 
 Tạo bộ ảnh giám định giấy tờ xe ô tô PTI chuẩn định dạng từ ảnh giấy tờ, xuất file PDF.
-Danh mục giấy tờ được **định nghĩa sẵn trong dự án** (bảng `DOC_TYPES` trong `gtx_gen.py`) —
-không cần file Excel GTX nữa.
+Danh mục giấy tờ được **định nghĩa sẵn trong dự án** (file `doc_types.json`) — không cần
+file Excel GTX nữa. Danh mục **bổ sung được**: sửa file JSON, hoặc thêm ngay trên giao diện web.
 
 **Kích hoạt khi người dùng:**
 - Upload ảnh giấy tờ xe và gõ "tạo ảnh GTX"
@@ -36,11 +36,52 @@ dùng cho tiêu đề mỗi trang và tên file output `GiamDinh_GiayToXe_{BKS}.
 
 ---
 
-## Danh mục tiền tố mặc định (`DOC_TYPES`)
+## Danh mục tiền tố
 
-Đây là **nguồn dữ liệu duy nhất** cho caption. Sửa/thêm hạng mục chỉ cần chỉnh
-bảng `DOC_TYPES` ở đầu `gtx_gen.py` (và bảng dự phòng `DOC_TYPES_FALLBACK` trong
-`index.html` nếu muốn giao diện tĩnh cũng hiển thị đúng).
+Caption lấy từ danh mục này. Có **3 lớp**, lớp sau ghi đè lớp trước khi trùng tiền tố:
+
+| # | Nguồn | Phạm vi | Dùng khi |
+|---|-------|---------|----------|
+| 1 | `BUILTIN_DOC_TYPES` trong `gtx_gen.py` | Dự phòng | Chỉ dùng khi thiếu `doc_types.json` |
+| 2 | **`doc_types.json`** | Toàn dự án, mọi người dùng | Bổ sung hạng mục chính thức, lâu dài |
+| 3 | Ô **"Thêm hạng mục"** trên web | Riêng trình duyệt đang dùng | Hạng mục phát sinh, không cần deploy lại |
+
+### Cách 1 — sửa `doc_types.json` (khuyến nghị cho hạng mục cố định)
+
+```json
+{
+  "items": {
+    "9": "Biên bản hiện trường",
+    "3.7": "Xác minh bằng lái bổ sung"
+  }
+}
+```
+
+Thêm dòng vào mục `items`, lưu file, khởi động lại server (hoặc commit + push để Render
+deploy lại). Khóa bắt đầu bằng `_` chỉ là ghi chú, chương trình bỏ qua.
+
+### Cách 2 — thêm trên giao diện web (nhanh, không cần deploy)
+
+Trong khối **"Danh mục tiền tố"**, nhập Tiền tố + Tên hạng mục rồi bấm **"+ Thêm hạng mục"**.
+Hạng mục mới gắn nhãn *tự thêm*, có nút `×` để bỏ, được lưu trong `localStorage` của
+trình duyệt đó và tự gửi kèm mỗi lần tạo PDF.
+
+> Lưu ý: hạng mục thêm kiểu này **chỉ có trên máy/trình duyệt đó**, không chia sẻ cho
+> đồng nghiệp và sẽ mất nếu xóa dữ liệu duyệt web. Muốn dùng chung thì đưa vào `doc_types.json`.
+
+### Cách 3 — tham số `--them` khi chạy script
+
+```powershell
+python gtx_gen.py --bks "14K-240.48" --them "9=Biên bản hiện trường" --them "3.7=Xác minh bằng lái"
+```
+
+### Quy tắc tiền tố
+
+- Dạng số: `9` hoặc `3.7` (tối đa 3 chữ số mỗi phần)
+- Chữ số đầu = nhóm, quyết định layout (xem bảng Layout bên dưới)
+- Tiền tố mới thuộc nhóm có sẵn thì theo layout của nhóm đó; nhóm từ 4 trở lên luôn 1 ảnh/trang
+
+### Bảng danh mục hiện tại
 
 | Tiền tố | Tên hạng mục | Layout |
 |---------|--------------|--------|
@@ -68,10 +109,10 @@ bảng `DOC_TYPES` ở đầu `gtx_gen.py` (và bảng dự phòng `DOC_TYPES_FA
 
 Caption in trên ảnh = `{tiền tố}. {tên hạng mục}` — ví dụ `1.1. Đăng ký xe mặt trước`.
 
-> **Tiền tố ngoài danh mục** (ví dụ `9.1.jpg`): code lấy tên của mục gần nhất phía trước
-> trong cùng nhóm; nếu không có thì fallback `"Hạng mục 9.1"`. Giao diện web cũng đánh dấu
-> đỏ "tiền tố không có trong danh mục" ngay khi chọn file.
-> → Cách xử lý: **bổ sung tiền tố vào `DOC_TYPES`** trong `gtx_gen.py`, rồi chạy lại.
+> **Tiền tố ngoài danh mục** (ví dụ `9.1.jpg` khi chưa khai báo): code lấy tên của mục gần
+> nhất phía trước trong cùng nhóm; nếu không có thì fallback `"Hạng mục 9.1"`. Giao diện web
+> đánh dấu đỏ "tiền tố không có trong danh mục" ngay khi chọn file.
+> → Cách xử lý: bổ sung tiền tố theo một trong 3 cách ở trên.
 
 ---
 
@@ -146,8 +187,9 @@ python app.py
 Mở http://127.0.0.1:5000 → (1) chọn ảnh/PDF, (2) nhập biển số xe + GĐV + ngày,
 (3) bấm **Tạo PDF giám định** → xem trước và tải về.
 
-Giao diện tự nạp danh mục từ endpoint `/doc-types` (trả về `DOC_TYPES`), nên bảng
-hướng dẫn và nhãn hạng mục trên từng file luôn khớp code.
+Giao diện tự nạp danh mục từ endpoint `/doc-types` (trả về `BUILTIN_DOC_TYPES` đã ghi đè
+bởi `doc_types.json`), nên bảng danh mục và nhãn hạng mục trên từng file luôn khớp server.
+Hạng mục tự thêm nằm ở `localStorage` và gửi kèm request qua trường `extra`.
 
 ### B. Chạy script trực tiếp
 
@@ -167,6 +209,7 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/1
 | `--bks` | *(trống)* | Biển số xe |
 | `--gdv` | *(trống)* | Giám định viên |
 | `--ngay` | *(trống)* | Ngày giám định |
+| `--them` | — | Bổ sung hạng mục, lặp lại được: `--them "9=Biên bản hiện trường"` |
 
 4. Output PDF xuất ra thư mục `output\`
 
@@ -176,7 +219,10 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/1
 
 | Thành phần | Vai trò |
 |-----------|---------|
-| `DOC_TYPES` | Bảng tiền tố → tên hạng mục (nguồn dữ liệu duy nhất cho caption) |
+| `BUILTIN_DOC_TYPES` | Bảng tiền tố → tên hạng mục, bản dự phòng trong code |
+| `load_doc_types(path)` | Nạp `doc_types.json` ghi đè lên bảng dự phòng → `DOC_TYPES` |
+| `clean_doc_types(raw)` | Lọc tiền tố/tên hợp lệ, dùng cho cả JSON lẫn dữ liệu từ web |
+| `sort_keys(keys)` | Sắp xếp tiền tố theo số (1.1 < 1.2 < 1.10 < 2 < 10) |
 | `normalize_bks(text)` | Chuẩn hoá biển số xe người dùng nhập |
 | `classify_images(paths, items=None)` | Gom ảnh theo nhóm, gán caption từ `DOC_TYPES` |
 | `get_font(bold, italic, pt)` | Nạp font (có `lru_cache`), ưu tiên Arial → Be Vietnam Pro → DejaVu |
@@ -188,13 +234,14 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/1
 | `create_portrait_page_4` | Trang A4 dọc 2×2 (nhóm 3) |
 | `create_portrait_page_1` | Trang A4 dọc 1 ảnh (nhóm ≥ 4) |
 | `pdf_to_images` | PyMuPDF render PDF → JPG tạm ở 150 DPI |
-| `main(logo_path, image_dir, output_path, bks, gdv, ngay)` | Điều phối toàn bộ, xuất PDF |
+| `main(..., extra_doc_types=None)` | Điều phối toàn bộ, xuất PDF; `extra_doc_types` là hạng mục thêm tại chỗ |
 
 ---
 
 ## Lưu ý quan trọng
 
-- **Không dùng file Excel GTX nữa** — danh mục nằm trong `DOC_TYPES` của `gtx_gen.py`
+- **Không dùng file Excel GTX nữa** — danh mục nằm trong `doc_types.json`
+- **Bổ sung hạng mục**: sửa `doc_types.json` (dùng chung) hoặc ô "Thêm hạng mục" trên web (riêng máy)
 - **Biển số xe là bắt buộc**, nhập thủ công (web) hoặc qua tham số `bks=` (script)
 - **Caption**: Nền TRẮNG, chữ ĐEN (không dùng màu blue)
 - **GĐV dòng 2**: Căn GIỮA theo vùng text (không căn trái)

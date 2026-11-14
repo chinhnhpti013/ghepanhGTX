@@ -1,0 +1,32 @@
+{
+  "_huong_dan": [
+    "Danh mục tiền tố giấy tờ. Key = tiền tố ở đầu tên file ảnh, value = tên hạng mục in làm caption.",
+    "Thêm hạng mục mới: chèn thêm một dòng \"tiền tố\": \"tên hạng mục\" vào mục items bên dưới.",
+    "Tiền tố phải có dạng số: 3 hoặc 3.7 (nhóm . thứ tự). Nhóm quyết định layout trang:",
+    "nhóm 1 = A4 ngang 4 ảnh/trang | nhóm 2 = A4 dọc 2 ảnh/trang | nhóm 3 = A4 dọc 4 ảnh/trang | nhóm 4 trở lên = A4 dọc 1 ảnh/trang.",
+    "Các khóa bắt đầu bằng dấu gạch dưới (như _huong_dan) chỉ là ghi chú, chương trình bỏ qua."
+  ],
+  "items": {
+    "1.1": "Đăng ký xe mặt trước",
+    "1.2": "Đăng ký xe mặt sau",
+    "1.3": "Bằng lái mặt trước",
+    "1.4": "Bằng lái mặt sau",
+    "1.5": "Căn cước công dân lái xe",
+    "1.6": "Căn cước công dân lái xe",
+    "2.1": "Giấy chứng nhận đăng kiểm A5 mặt trước",
+    "2.2": "Giấy chứng nhận đăng kiểm A5 mặt sau",
+    "2.3": "Giấy chứng nhận bảo hiểm A5 mặt trước",
+    "2.4": "Giấy chứng nhận bảo hiểm A5 mặt sau",
+    "3.1": "Xác minh bằng lái",
+    "3.2": "Xác minh bằng lái",
+    "3.3": "Xác minh bằng lái",
+    "3.4": "Xác minh bằng lái",
+    "3.5": "Xác minh bằng lái",
+    "3.6": "Xác minh bằng lái",
+    "4": "Giấy chứng nhận bảo hiểm A4",
+    "5": "Xác minh thanh toán phí bảo hiểm",
+    "6": "Giấy chứng nhận kiểm định XCG A4",
+    "7": "Biên bản bàn giao xe mới",
+    "8": "Giấy xác nhận quyền thụ hưởng Ngân hàng"
+  }
+}
