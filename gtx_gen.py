@@ -437,12 +437,28 @@ def main(logo_path, image_dir, output_path, bks='', gdv='', ngay=''):
     return output_path
 
 if __name__ == '__main__':
-    BASE = r"d:\MCP\Claude Code\anh-giay-to-xe"
+    import argparse
+
+    BASE = os.path.dirname(os.path.abspath(__file__))
+    ap = argparse.ArgumentParser(
+        description="Tạo PDF giám định giấy tờ xe PTI từ ảnh/PDF đặt tên theo tiền tố danh mục."
+    )
+    ap.add_argument('--images', default=os.path.join(BASE, "input"),
+                    help="Thư mục chứa ảnh JPG/PNG và file PDF giấy tờ")
+    ap.add_argument('--logo', default=os.path.join(BASE, "assets", "logo-ptisos.png"),
+                    help="Đường dẫn logo PTI SOS (PNG nền trong suốt)")
+    ap.add_argument('--out', default=os.path.join(BASE, "output", "GiamDinh_GiayToXe.pdf"),
+                    help="File PDF xuất ra (biển số sẽ được chèn vào tên file)")
+    ap.add_argument('--bks', default='', help='Biển số xe, VD: 14K-240.48')
+    ap.add_argument('--gdv', default='', help='Tên giám định viên')
+    ap.add_argument('--ngay', default='', help='Ngày giám định, dd/mm/yyyy')
+    a = ap.parse_args()
+
     main(
-        logo_path=os.path.join(BASE, "assets", "logo-ptisos.png"),
-        image_dir=os.path.join(BASE, "input"),
-        output_path=os.path.join(BASE, "output", "GiamDinh_GiayToXe.pdf"),
-        bks="14K-240.48",
-        gdv="Nguyễn Văn Hướng",
-        ngay="14/07/2026"
+        logo_path=a.logo,
+        image_dir=a.images,
+        output_path=a.out,
+        bks=a.bks,
+        gdv=a.gdv,
+        ngay=a.ngay,
     )

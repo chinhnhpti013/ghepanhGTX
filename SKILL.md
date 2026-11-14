@@ -59,10 +59,12 @@ Mo http://127.0.0.1:5000 → chon anh/PDF → nhap **Bien so xe** (bat buoc), GD
 
 ```powershell
 cd "d:\MCP\Claude Code\anh-giay-to-xe"
-python gtx_gen.py
+python gtx_gen.py --bks "14K-240.48" --gdv "Nguyen Van Huong" --ngay "14/11/2026"
 ```
 
-De thay doi BKS / GDV / ngay / duong dan, sua block `if __name__ == '__main__':` trong `gtx_gen.py`.
+Tham so: `--images` (mac dinh `input\`), `--logo` (mac dinh `assets\logo-ptisos.png`),
+`--out` (mac dinh `output\GiamDinh_GiayToXe.pdf`), `--bks`, `--gdv`, `--ngay`.
+Xem day du: `python gtx_gen.py --help`.
 
 ---
 
@@ -103,7 +105,9 @@ Them/sua hang muc: chinh `DOC_TYPES` trong `gtx_gen.py` (va `DOC_TYPES_FALLBACK`
 | So trang footer | Can giua | Ngoai cung ben PHAI | 2026-06-09 |
 | Layout nhom 3 | A4 doc, 2 anh (1x2) | A4 doc, 4 anh (2x2) | 2026-07-17 |
 | Nguon danh muc | File `GTX.xlsx` (openpyxl) | Bang `DOC_TYPES` trong code | 2026-11-14 |
-| Bien so xe | Doc tu Excel | Nguoi dung nhap (`bks=` / o tren web) | 2026-11-14 |
+| Bien so xe | Doc tu Excel | Nguoi dung nhap (`--bks` / o tren web) | 2026-11-14 |
+| CLI | Sua tay block `__main__` | Tham so `--images/--logo/--out/--bks/--gdv/--ngay` | 2026-11-14 |
+| Goi skill `.skill` | Code dan inline trong SKILL.md | Bundle `scripts/gtx_gen.py` + `fonts/` | 2026-11-14 |
 
 ---
 

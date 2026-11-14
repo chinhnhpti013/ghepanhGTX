@@ -153,9 +153,22 @@ hướng dẫn và nhãn hạng mục trên từng file luôn khớp code.
 
 1. Cài thư viện: `pip install Pillow reportlab numpy PyMuPDF -q`
 2. Đặt ảnh JPG/PNG + PDF vào thư mục `input\` (logo ở `assets\logo-ptisos.png`)
-3. Chỉnh `bks=`, `gdv=`, `ngay=` trong block `if __name__ == '__main__':` của `gtx_gen.py`
-4. Chạy: `python gtx_gen.py`
-5. Output PDF xuất ra thư mục `output\`
+3. Chạy với tham số dòng lệnh:
+
+```powershell
+python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/11/2026"
+```
+
+| Tham số | Mặc định | Ý nghĩa |
+|---------|----------|---------|
+| `--images` | `input\` | Thư mục ảnh JPG/PNG + PDF |
+| `--logo` | `assets\logo-ptisos.png` | Logo PTI SOS |
+| `--out` | `output\GiamDinh_GiayToXe.pdf` | File PDF xuất ra (tự chèn BKS vào tên) |
+| `--bks` | *(trống)* | Biển số xe |
+| `--gdv` | *(trống)* | Giám định viên |
+| `--ngay` | *(trống)* | Ngày giám định |
+
+4. Output PDF xuất ra thư mục `output\`
 
 ---
 
