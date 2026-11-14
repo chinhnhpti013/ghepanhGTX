@@ -6,6 +6,7 @@
 <title>Ghép ảnh Giám định Giấy tờ xe (GTX) — PTI SOS</title>
 <style>
   :root {
+    color-scheme: light;   /* để lịch của <input type=date> theo đúng giao diện sáng */
     --blue: #0070c0;
     --blue-dark: #005699;
     --bg: #f4f6f9;
@@ -21,6 +22,7 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
+      color-scheme: dark;   /* lịch nền tối, icon sáng */
       --bg: #0f151b;
       --card: #172029;
       --text: #e6edf3;
@@ -78,11 +80,25 @@
   @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
 
   label.fld { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; color: var(--muted); }
-  input[type=text] {
+  input[type=text], input[type=date] {
     width: 100%; padding: 10px 13px; border: 1px solid var(--border); border-radius: 9px;
     background: var(--card); color: var(--text); font-size: 14.5px; font-family: inherit;
   }
-  input[type=text]:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,112,192,.15); }
+  input[type=text]:focus, input[type=date]:focus {
+    outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,112,192,.15);
+  }
+  /* Ô ngày + nút "Hôm nay" nằm cùng một hàng */
+  .date-row { display: flex; gap: 8px; align-items: stretch; }
+  .date-row input[type=date] { flex: 1; min-width: 0; }
+  input[type=date]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .75; }
+  input[type=date]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+  .btn-today {
+    flex-shrink: 0; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px;
+    background: var(--code-bg); color: var(--muted); font-size: 13.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer; white-space: nowrap; transition: all .15s;
+  }
+  .btn-today:hover { border-color: var(--blue); color: var(--blue); background: rgba(0,112,192,.08); }
+  .btn-today.active { border-color: var(--blue); color: #fff; background: var(--blue); }
 
   /* File chips */
   .files { margin-top: 14px; display: flex; flex-direction: column; gap: 7px; }
@@ -197,7 +213,10 @@ python app.py</code></pre>
         </div>
         <div>
           <label class="fld" for="ngay">Ngày giám định</label>
-          <input type="text" id="ngay" placeholder="dd/mm/yyyy">
+          <div class="date-row">
+            <input type="date" id="ngay">
+            <button type="button" class="btn-today" id="todayBtn" title="Chọn ngày hôm nay">Hôm nay</button>
+          </div>
         </div>
       </div>
     </div>
@@ -306,11 +325,36 @@ python app.py</code></pre>
   }
   renderDocTypes();
 
-  function setTodayDate(){
+  // <input type="date"> dùng định dạng ISO yyyy-mm-dd, còn PDF cần dd/mm/yyyy
+  const ngayInput = document.getElementById('ngay');
+  const todayBtn  = document.getElementById('todayBtn');
+
+  function todayISO(){
     const d = new Date();
-    const p = n => String(n).padStart(2,'0');
-    document.getElementById('ngay').value = `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   }
+
+  // Đổi yyyy-mm-dd -> dd/mm/yyyy để in lên header PDF
+  function ngayVN(){
+    const v = ngayInput.value;
+    if (!v) return '';
+    const [y, m, d] = v.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  // Làm nổi nút "Hôm nay" khi ô ngày đang đúng là hôm nay
+  function syncTodayBtn(){
+    todayBtn.classList.toggle('active', ngayInput.value === todayISO());
+  }
+
+  function setTodayDate(){
+    ngayInput.value = todayISO();
+    syncTodayBtn();
+  }
+
+  todayBtn.onclick = setTodayDate;
+  ngayInput.addEventListener('change', syncTodayBtn);
 
   // Ngày mặc định = hôm nay
   setTodayDate();
@@ -425,7 +469,7 @@ python app.py</code></pre>
     imgFiles.forEach(f => fd.append('images', f, f.name));
     fd.append('bks', bks);
     fd.append('gdv', document.getElementById('gdv').value.trim());
-    fd.append('ngay', document.getElementById('ngay').value.trim());
+    fd.append('ngay', ngayVN());
 
     setLoading(true);
     try {
