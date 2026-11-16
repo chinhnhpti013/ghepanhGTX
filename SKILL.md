@@ -59,11 +59,13 @@ python app.py
 Mo http://127.0.0.1:5000:
 
 - **Man hinh 1** — chon anh/PDF, nhap **Bien so xe** (bat buoc), GDV, ngay giam dinh,
-  **Ngay ton that**, **Dia diem ton that**, va khoi "Thong tin them cho Bien ban giam dinh"
-  (lai xe/chu xe, SDT, so GPLX, so ho so, gara, phong, y kien) → bam **Tao PDF giam dinh**.
+  **Ngay ton that**, **Dia diem ton that**, **Ten lai / chu xe**, **SDT lai / chu xe**,
+  va khoi "Thong tin them cho Bien ban giam dinh" (so GPLX, SDT GDV, so ho so, gara,
+  phong, y kien) → bam **Tao PDF giam dinh**.
 - **Man hinh 2** — 2 tab:
   - *Ban anh giay to*: PDF bo anh, xem truoc va tai ve.
-  - *Bien ban giam dinh*: bien ban mau `BM.PTI.CG.02.08a`, xem truoc bang anh tung trang,
+  - *Bien ban giam dinh*: bien ban mau `BM.PTI.CG.02.08a` (dung san ngay sau khi tao bo
+    anh), xem truoc bang anh tung trang — cham vao anh de xem co lon,
     xac nhan thong tin, ky tay 2 o (lai xe/chu xe + GDV), tai ve PDF da ky va file
     kiem chung `.json`.
 
@@ -153,6 +155,8 @@ Trung tien to co san -> ten moi ghi de ten cu.
 | Bien so xe | Doc tu Excel | Nguoi dung nhap (`--bks` / o tren web) | 2026-11-14 |
 | Ngay / dia diem ton that | Khong co | O nhap tren man hinh 1 (khong bat buoc) | 2026-11-16 |
 | Bien ban giam dinh | Khong co | Tab moi o man hinh 2: mau BM.PTI.CG.02.08a + ky tay + dau vet kiem chung | 2026-11-16 |
+| Ten / SDT lai-chu xe | Trong khoi gap | O nhap ngay tai muc "Thong tin giam dinh" | 2026-11-16 |
+| Xem truoc bien ban | Chi dung khi bam sang tab | Dung san ngam + tu cuon toi + cham de xem co lon | 2026-11-16 |
 | CLI | Sua tay block `__main__` | Tham so `--images/--logo/--out/--bks/--gdv/--ngay` | 2026-11-14 |
 | Goi skill `.skill` | Code dan inline trong SKILL.md | Bundle `scripts/gtx_gen.py` + `fonts/` | 2026-11-14 |
 | O Ngay giam dinh | `<input type=text>` | `<input type=date>` + nut "Hom nay" | 2026-11-14 |

@@ -32,13 +32,15 @@ File PDF tự động chuyển sang ảnh bằng PyMuPDF (`pip install PyMuPDF`)
 | Ngày giám định | Ô "Ngày giám định", hoặc `ngay=` | — | Bộ ảnh + Biên bản |
 | **Ngày tổn thất** | Ô "Ngày tổn thất" (date picker) | — | Biên bản |
 | **Địa điểm tổn thất** | Ô "Địa điểm tổn thất" | — | Biên bản |
+| **Tên lái / chủ xe** | Ô "Tên lái / chủ xe" | — | Biên bản |
+| **SĐT lái / chủ xe** | Ô "SĐT lái / chủ xe" | — | Biên bản |
 
 BKS được chuẩn hoá bằng `normalize_bks()` (regex `\d{2}[A-Z]{1,2}-?\d{3,5}\.?\d*`),
 dùng cho tiêu đề mỗi trang và tên file output `GiamDinh_GiayToXe_{BKS}.pdf`.
 
 ### 3. Thông tin thêm cho Biên bản giám định (khối gập trên web, đều không bắt buộc)
 
-Lái xe/Chủ xe · SĐT lái xe/chủ xe · Số GPLX · SĐT giám định viên · Số hồ sơ ·
+Số GPLX · SĐT giám định viên · Số hồ sơ ·
 Gara / Địa điểm giám định · Phòng / Khu vực giám định · Ý kiến của các bên.
 
 > Các trường này chỉ dùng cho **Biên bản giám định** (mục riêng bên dưới), không
@@ -202,6 +204,9 @@ giám định" nếu cần), (3) bấm **Tạo PDF giám định**.
 - **Bản ảnh giấy tờ** — PDF bộ ảnh như trước, xem trước và tải về.
 - **Biên bản giám định** — biên bản mẫu `BM.PTI.CG.02.08a`, xem trước, ký tay và tải về
   (xem mục "Biên bản giám định" bên dưới).
+
+Biên bản được dựng sẵn ngay khi tạo xong bộ ảnh, nên bấm sang tab là thấy luôn; trang
+cũng tự cuộn tới vùng xem trước. Chạm vào ảnh từng trang để mở cỡ lớn.
 
 Giao diện tự nạp danh mục từ endpoint `/doc-types` (trả về `BUILTIN_DOC_TYPES` đã ghi đè
 bởi `doc_types.json`), nên bảng danh mục và nhãn hạng mục trên từng file luôn khớp server.

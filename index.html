@@ -186,7 +186,11 @@
   /* Xem trước biên bản bằng ảnh từng trang — hiển thị được cả trên điện thoại */
   .pdf-pages img {
     display: block; width: 100%; height: auto; background: #fff;
-    border: 1px solid var(--border); border-radius: 11px; margin-bottom: 12px;
+    border: 1px solid var(--border); border-radius: 11px; cursor: zoom-in;
+  }
+  .pdf-page { margin: 0 0 14px; }
+  .pdf-page figcaption {
+    margin-top: 6px; font-size: 12.5px; color: var(--muted); text-align: center;
   }
   .pdf-empty {
     border: 1px dashed var(--border); border-radius: 11px; padding: 48px 20px;
@@ -337,22 +341,23 @@ python app.py</code></pre>
         </div>
       </div>
 
+      <div class="row" style="margin-top:18px">
+        <div>
+          <label class="fld" for="chuXe">Tên lái / chủ xe</label>
+          <input type="text" id="chuXe" placeholder="VD: Trần Văn Bình">
+        </div>
+        <div>
+          <label class="fld" for="sdtChuXe">SĐT lái / chủ xe</label>
+          <input type="text" id="sdtChuXe" placeholder="VD: 0987 654 321" inputmode="tel">
+        </div>
+      </div>
+
       <details class="help fieldset" id="bbFields">
         <summary>🖊️ Thông tin thêm cho Biên bản giám định (không bắt buộc)</summary>
         <p class="sub" style="margin-bottom:14px">
           Dùng cho mẫu <code>BM.PTI.CG.02.08a</code> — Biên bản giám định thiệt hại, xem trước ở bước sau.
         </p>
-        <div class="row">
-          <div>
-            <label class="fld" for="chuXe">Lái xe / Chủ xe</label>
-            <input type="text" id="chuXe" placeholder="VD: Trần Văn Bình">
-          </div>
-          <div>
-            <label class="fld" for="sdtChuXe">SĐT lái xe / chủ xe</label>
-            <input type="text" id="sdtChuXe" placeholder="VD: 0987 654 321" inputmode="tel">
-          </div>
-        </div>
-        <div class="row3" style="margin-top:16px">
+        <div class="row3">
           <div>
             <label class="fld" for="gplx">Số GPLX</label>
             <input type="text" id="gplx" placeholder="VD: 140123456789">
@@ -412,6 +417,9 @@ python app.py</code></pre>
       <iframe id="preview" title="Xem trước PDF bản ảnh giấy tờ"></iframe>
       <p class="sub" style="margin:10px 0 0; font-size:12.5px">
         Trình duyệt điện thoại có thể không hiển thị được bản xem trước PDF — khi đó bấm <b>Tải PDF</b> để mở bằng ứng dụng đọc PDF.
+      </p>
+      <p class="sub" style="margin:8px 0 0; font-size:12.5px">
+        📝 <b>Biên bản giám định</b> theo mẫu <code>BM.PTI.CG.02.08a</code> nằm ở tab bên trên — bấm vào đó để xem trước và ký tay.
       </p>
     </div>
 
@@ -854,6 +862,7 @@ python app.py</code></pre>
       resetBienBan();          // thông tin vừa đổi → biên bản phải dựng lại
       showTab('anh');
       result.scrollIntoView({ behavior: 'smooth' });
+      loadBienBan();           // dựng sẵn biên bản để bấm sang tab là có ngay
     } catch (err) {
       showErr(err.message || 'Không thể kết nối máy chủ.');
     } finally {
@@ -916,10 +925,18 @@ python app.py</code></pre>
     }
     bbPages.innerHTML = '';
     pages.forEach((b64, i) => {
+      const url = URL.createObjectURL(b64ToBlob(b64, 'image/png'));
+      const fig = document.createElement('figure');
+      fig.className = 'pdf-page';
       const img = document.createElement('img');
-      img.src = 'data:image/png;base64,' + b64;
+      img.src = url;
       img.alt = 'Biên bản giám định — trang ' + (i + 1);
-      bbPages.appendChild(img);
+      img.title = 'Chạm để xem ảnh cỡ lớn';
+      img.onclick = () => window.open(url, '_blank');
+      const cap = document.createElement('figcaption');
+      cap.textContent = 'Trang ' + (i + 1) + '/' + pages.length + ' — chạm vào ảnh để xem cỡ lớn';
+      fig.appendChild(img); fig.appendChild(cap);
+      bbPages.appendChild(fig);
     });
   }
 
@@ -941,6 +958,8 @@ python app.py</code></pre>
       padKhach.setup(); padGdv.setup();
       renderVerify();
       if (!bbLoaded) loadBienBan();
+      // Đưa bản xem trước vào tầm nhìn — trên điện thoại pane nằm dưới màn hình
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
   tabAnhBtn.onclick = () => showTab('anh');
@@ -951,9 +970,9 @@ python app.py</code></pre>
     const f = bbFields();
     const items = [
       ['Biển kiểm soát', f.bks],
-      ['Lái xe / Chủ xe', f.chu_xe],
+      ['Tên lái / chủ xe', f.chu_xe],
       ['Số GPLX', f.gplx],
-      ['SĐT lái xe / chủ xe', f.sdt_chu_xe],
+      ['SĐT lái / chủ xe', f.sdt_chu_xe],
       ['Ngày tổn thất', f.ngay_ton_that],
       ['Địa điểm tổn thất', f.dia_diem_ton_that],
       ['Giám định viên', f.gdv],
