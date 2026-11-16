@@ -38,7 +38,8 @@ anh-giay-to-xe\
   fonts\                 # Be Vietnam Pro (du phong cho Linux/hosting)
   output\
     GiamDinh_GiayToXe_{BKS}.pdf   # Output
-  gtx_gen.py            # Script chinh
+  gtx_gen.py            # Script chinh (bo anh giay to)
+  bien_ban.py           # Bien ban giam dinh BM.PTI.CG.02.08a (PDF + ky tay)
   doc_types.json        # Danh muc tien to -> ten hang muc (sua de bo sung)
   app.py                # Web server Flask
   index.html            # Giao dien web
@@ -55,7 +56,16 @@ cd "d:\MCP\Claude Code\anh-giay-to-xe"
 python app.py
 ```
 
-Mo http://127.0.0.1:5000 → chon anh/PDF → nhap **Bien so xe** (bat buoc), GDV, ngay → Tao PDF.
+Mo http://127.0.0.1:5000:
+
+- **Man hinh 1** — chon anh/PDF, nhap **Bien so xe** (bat buoc), GDV, ngay giam dinh,
+  **Ngay ton that**, **Dia diem ton that**, va khoi "Thong tin them cho Bien ban giam dinh"
+  (lai xe/chu xe, SDT, so GPLX, so ho so, gara, phong, y kien) → bam **Tao PDF giam dinh**.
+- **Man hinh 2** — 2 tab:
+  - *Ban anh giay to*: PDF bo anh, xem truoc va tai ve.
+  - *Bien ban giam dinh*: bien ban mau `BM.PTI.CG.02.08a`, xem truoc bang anh tung trang,
+    xac nhan thong tin, ky tay 2 o (lai xe/chu xe + GDV), tai ve PDF da ky va file
+    kiem chung `.json`.
 
 ### Script truc tiep
 
@@ -68,6 +78,29 @@ Tham so: `--images` (mac dinh `input\`), `--logo` (mac dinh `assets\logo-ptisos.
 `--out` (mac dinh `output\GiamDinh_GiayToXe.pdf`), `--bks`, `--gdv`, `--ngay`,
 `--them TIENTO=TEN` (bo sung hang muc, lap lai duoc).
 Xem day du: `python gtx_gen.py --help`.
+
+---
+
+## Bien ban giam dinh (`bien_ban.py`)
+
+Dung PDF theo dung mau PTI **BM.PTI.CG.02.08a** (Quy trinh giam dinh bao hiem xe co gioi):
+letterhead PTI, "BIEN BAN GIAM DINH THIET HAI", thanh phan tham gia, thong tin ton that,
+bang 10 dong hang muc giam dinh, y kien cac ben, don vi sua chua, 2 o ky.
+
+- Ban chua ky: watermark cheo "BAN XEM TRUOC — CHUA KY".
+- Ky tay: HTML5 Canvas + Pointer Events (ngon tay / but / chuot), moi o co nut *Xoa / Ky lai*,
+  net ky luu theo toa do nen khong mat khi xoay may; xuat PNG nen trong suot da cat sat net.
+- Bat buoc truoc khi ky: du 2 chu ky + tich o "Toi da doc va dong y noi dung bien ban".
+- Dau vet kiem chung in cuoi bien ban da ky: ma ho so, thoi diem ky (gio VN/UTC), gio thiet bi,
+  toa do GPS, thiet bi/trinh duyet, IP, ma bam SHA-256 cua du lieu ky. Tai duoc file
+  `*_kiemchung.json` kem ma bam cua chinh file PDF.
+
+Dung thu bo cuc: `python bien_ban.py` → `output\BienBan_Thu.pdf`.
+
+Endpoint: `POST /bien-ban` (ban chua ky), `POST /bien-ban/ky` (ban da ky) — deu tra JSON
+`{name, pdf(base64), pages[PNG base64], ...}`.
+
+> Sua noi dung mau: chi sua ham `body_flowables()` trong `bien_ban.py`.
 
 ---
 
@@ -118,6 +151,8 @@ Trung tien to co san -> ten moi ghi de ten cu.
 | Layout nhom 3 | A4 doc, 2 anh (1x2) | A4 doc, 4 anh (2x2) | 2026-07-17 |
 | Nguon danh muc | File `GTX.xlsx` (openpyxl) | Bang `DOC_TYPES` trong code | 2026-11-14 |
 | Bien so xe | Doc tu Excel | Nguoi dung nhap (`--bks` / o tren web) | 2026-11-14 |
+| Ngay / dia diem ton that | Khong co | O nhap tren man hinh 1 (khong bat buoc) | 2026-11-16 |
+| Bien ban giam dinh | Khong co | Tab moi o man hinh 2: mau BM.PTI.CG.02.08a + ky tay + dau vet kiem chung | 2026-11-16 |
 | CLI | Sua tay block `__main__` | Tham so `--images/--logo/--out/--bks/--gdv/--ngay` | 2026-11-14 |
 | Goi skill `.skill` | Code dan inline trong SKILL.md | Bundle `scripts/gtx_gen.py` + `fonts/` | 2026-11-14 |
 | O Ngay giam dinh | `<input type=text>` | `<input type=date>` + nut "Hom nay" | 2026-11-14 |

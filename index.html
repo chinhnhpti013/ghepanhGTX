@@ -80,13 +80,18 @@
   @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
 
   label.fld { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; color: var(--muted); }
-  input[type=text], input[type=date] {
+  input[type=text], input[type=date], textarea {
     width: 100%; padding: 10px 13px; border: 1px solid var(--border); border-radius: 9px;
     background: var(--card); color: var(--text); font-size: 14.5px; font-family: inherit;
   }
-  input[type=text]:focus, input[type=date]:focus {
+  textarea { resize: vertical; min-height: 68px; line-height: 1.5; }
+  input[type=text]:focus, input[type=date]:focus, textarea:focus {
     outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,112,192,.15);
   }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .row3 { grid-template-columns: 1fr; } }
+  .fieldset { margin-top: 18px; }
+  .fieldset > .row, .fieldset > .row3 { margin-bottom: 16px; }
   /* Ô ngày + nút "Hôm nay" nằm cùng một hàng */
   .date-row { display: flex; gap: 8px; align-items: stretch; }
   .date-row input[type=date] { flex: 1; min-width: 0; }
@@ -168,6 +173,79 @@
   }
   iframe { width: 100%; height: 720px; border: 1px solid var(--border); border-radius: 11px; background: #fff; }
 
+  /* Tab kết quả: Bản ảnh giấy tờ | Biên bản giám định */
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    border: none; background: none; font-family: inherit; font-size: 14.5px; font-weight: 600;
+    color: var(--muted); padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; border-radius: 8px 8px 0 0;
+  }
+  .tab:hover { color: var(--text); background: var(--code-bg); }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* Xem trước biên bản bằng ảnh từng trang — hiển thị được cả trên điện thoại */
+  .pdf-pages img {
+    display: block; width: 100%; height: auto; background: #fff;
+    border: 1px solid var(--border); border-radius: 11px; margin-bottom: 12px;
+  }
+  .pdf-empty {
+    border: 1px dashed var(--border); border-radius: 11px; padding: 48px 20px;
+    text-align: center; color: var(--muted); font-size: 14px; background: var(--code-bg);
+  }
+
+  /* Khối xác thực thông tin trước khi ký */
+  .verify {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 11px;
+    padding: 16px 18px; margin-top: 18px;
+  }
+  .verify h3 { margin: 0 0 10px; font-size: 14.5px; }
+  .verify dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 13.5px; }
+  @media (max-width: 520px) { .verify dl { grid-template-columns: 1fr; gap: 2px; } }
+  .verify dt { color: var(--muted); font-weight: 600; }
+  .verify dd { margin: 0; word-break: break-word; }
+  .verify dd.empty { color: var(--muted); font-style: italic; }
+  .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; font-size: 14px; cursor: pointer; }
+  .consent input { width: 18px; height: 18px; margin: 2px 0 0; flex-shrink: 0; accent-color: var(--blue); }
+
+  /* Ô ký tay */
+  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  @media (max-width: 720px) { .pads { grid-template-columns: 1fr; } }
+  .pad { border: 1px solid var(--border); border-radius: 11px; padding: 12px; background: var(--card); }
+  .pad .pad-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .pad .pad-ttl { font-size: 13.5px; font-weight: 700; }
+  .pad .pad-sub { font-size: 12px; color: var(--muted); }
+  .btn-clear {
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 11px;
+    border-radius: 8px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-clear:hover { border-color: var(--danger); color: var(--danger); }
+  .pad-box { position: relative; border: 1px dashed var(--border); border-radius: 9px; background: #fff; }
+  .pad-box canvas { display: block; width: 100%; height: 170px; touch-action: none; cursor: crosshair; border-radius: 9px; }
+  .pad-hint {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #9aa7b4; font-size: 13.5px; pointer-events: none;
+  }
+  .pad-box.inked .pad-hint { display: none; }
+  .pad-line { position: absolute; left: 10%; right: 10%; bottom: 34px; border-bottom: 1px solid #e2e8ef; pointer-events: none; }
+
+  /* Dấu vết kiểm chứng sau khi ký */
+  .audit { margin-top: 18px; border: 1px solid var(--ok); border-radius: 11px; padding: 16px 18px; background: rgba(30,142,90,.07); }
+  .audit h3 { margin: 0 0 10px; font-size: 14.5px; color: var(--ok); }
+  .audit dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
+  @media (max-width: 560px) { .audit dl { grid-template-columns: 1fr; gap: 2px; } }
+  .audit dt { color: var(--muted); font-weight: 600; }
+  .audit dd { margin: 0; word-break: break-all; }
+  .audit .hash { font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; }
+  .btn-line { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .btn-sec {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer;
+    background: var(--card); color: var(--text); border: 1px solid var(--border);
+    padding: 10px 18px; border-radius: 9px; font-weight: 600; font-size: 14px; font-family: inherit;
+  }
+  .btn-sec:hover { border-color: var(--blue); color: var(--blue); }
+  .msg.ok { display: block; background: rgba(30,142,90,.12); color: var(--ok); border: 1px solid var(--ok); }
+
   details.help { margin-top: 6px; }
   details.help summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); }
   details.help[open] summary { margin-bottom: 12px; color: var(--text); }
@@ -244,6 +322,65 @@ python app.py</code></pre>
           </div>
         </div>
       </div>
+
+      <div class="row" style="margin-top:18px">
+        <div>
+          <label class="fld" for="ngayTon">Ngày tổn thất</label>
+          <div class="date-row">
+            <input type="date" id="ngayTon">
+            <button type="button" class="btn-today" id="clearTonBtn" title="Bỏ trống ngày tổn thất">Xoá</button>
+          </div>
+        </div>
+        <div>
+          <label class="fld" for="diaDiemTon">Địa điểm tổn thất</label>
+          <input type="text" id="diaDiemTon" placeholder="VD: QL18, phường Hà Khẩu, TP Hạ Long">
+        </div>
+      </div>
+
+      <details class="help fieldset" id="bbFields">
+        <summary>🖊️ Thông tin thêm cho Biên bản giám định (không bắt buộc)</summary>
+        <p class="sub" style="margin-bottom:14px">
+          Dùng cho mẫu <code>BM.PTI.CG.02.08a</code> — Biên bản giám định thiệt hại, xem trước ở bước sau.
+        </p>
+        <div class="row">
+          <div>
+            <label class="fld" for="chuXe">Lái xe / Chủ xe</label>
+            <input type="text" id="chuXe" placeholder="VD: Trần Văn Bình">
+          </div>
+          <div>
+            <label class="fld" for="sdtChuXe">SĐT lái xe / chủ xe</label>
+            <input type="text" id="sdtChuXe" placeholder="VD: 0987 654 321" inputmode="tel">
+          </div>
+        </div>
+        <div class="row3" style="margin-top:16px">
+          <div>
+            <label class="fld" for="gplx">Số GPLX</label>
+            <input type="text" id="gplx" placeholder="VD: 140123456789">
+          </div>
+          <div>
+            <label class="fld" for="sdtGdv">SĐT giám định viên</label>
+            <input type="text" id="sdtGdv" placeholder="VD: 0912 345 678" inputmode="tel">
+          </div>
+          <div>
+            <label class="fld" for="soHoSo">Số hồ sơ</label>
+            <input type="text" id="soHoSo" placeholder="VD: XCG.2026.00123">
+          </div>
+        </div>
+        <div class="row" style="margin-top:16px">
+          <div>
+            <label class="fld" for="diaDiemGd">Gara / Địa điểm giám định</label>
+            <input type="text" id="diaDiemGd" placeholder="VD: Gara Thành Đạt, TP Hạ Long">
+          </div>
+          <div>
+            <label class="fld" for="phong">Phòng / Khu vực giám định</label>
+            <input type="text" id="phong" value="Cứu hộ &amp; Giám định khu vực Quảng Ninh">
+          </div>
+        </div>
+        <div style="margin-top:16px">
+          <label class="fld" for="yKien">Ý kiến của các bên tham gia giám định</label>
+          <textarea id="yKien" placeholder="Để trống nếu muốn in dòng kẻ chấm để viết tay"></textarea>
+        </div>
+      </details>
     </div>
 
     <!-- Nút tạo -->
@@ -258,14 +395,103 @@ python app.py</code></pre>
 
   <!-- Kết quả -->
   <div class="card" id="result">
-    <div class="result-bar">
-      <div class="info">✅ Đã tạo: <b id="outName">GiamDinh_GiayToXe.pdf</b></div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <a class="dl" id="dlLink" download>⬇ Tải PDF</a>
-        <button type="button" class="dl" id="resetBtn" style="background: var(--blue); border:none; cursor:pointer;">🔄 Làm mới — Tạo hồ sơ khác</button>
+    <div class="tabs">
+      <button type="button" class="tab active" id="tabAnh">📄 Bản ảnh giấy tờ</button>
+      <button type="button" class="tab" id="tabBB">📝 Biên bản giám định</button>
+    </div>
+
+    <!-- Tab 1: bộ ảnh giấy tờ -->
+    <div id="paneAnh">
+      <div class="result-bar">
+        <div class="info">✅ Đã tạo: <b id="outName">GiamDinh_GiayToXe.pdf</b></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="dl" id="dlLink" download>⬇ Tải PDF</a>
+          <button type="button" class="dl" id="resetBtn" style="background: var(--blue); border:none; cursor:pointer;">🔄 Làm mới — Tạo hồ sơ khác</button>
+        </div>
+      </div>
+      <iframe id="preview" title="Xem trước PDF bản ảnh giấy tờ"></iframe>
+      <p class="sub" style="margin:10px 0 0; font-size:12.5px">
+        Trình duyệt điện thoại có thể không hiển thị được bản xem trước PDF — khi đó bấm <b>Tải PDF</b> để mở bằng ứng dụng đọc PDF.
+      </p>
+    </div>
+
+    <!-- Tab 2: biên bản giám định + ký tay -->
+    <div id="paneBB" style="display:none">
+      <div class="result-bar">
+        <div class="info">📝 Mẫu <b>BM.PTI.CG.02.08a</b> — <span id="bbState">bản xem trước, chưa ký</span></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn-sec" id="bbReload">🔄 Dựng lại theo thông tin hiện tại</button>
+          <a class="dl" id="bbDl" download>⬇ Tải biên bản</a>
+        </div>
+      </div>
+      <div class="msg err" id="bbErr"></div>
+      <div class="pdf-pages" id="bbPages">
+        <div class="pdf-empty">Chưa dựng bản xem trước biên bản.</div>
+      </div>
+
+      <!-- Xác thực thông tin trước khi ký -->
+      <div class="verify">
+        <h3>🔍 Xác nhận thông tin trước khi ký</h3>
+        <dl id="verifyList"></dl>
+        <label class="consent">
+          <input type="checkbox" id="consent">
+          <span>Tôi đã đọc và đồng ý nội dung biên bản giám định nêu trên.</span>
+        </label>
+      </div>
+
+      <!-- Hai ô ký tay -->
+      <div class="pads">
+        <div class="pad">
+          <div class="pad-top">
+            <div>
+              <div class="pad-ttl">LÁI XE / CHỦ XE</div>
+              <div class="pad-sub" id="padNameKhach">—</div>
+            </div>
+            <button type="button" class="btn-clear" data-clear="khach">Xoá / Ký lại</button>
+          </div>
+          <div class="pad-box" id="boxKhach">
+            <canvas id="padKhach"></canvas>
+            <div class="pad-line"></div>
+            <div class="pad-hint">Ký bằng ngón tay, bút cảm ứng hoặc chuột</div>
+          </div>
+        </div>
+        <div class="pad">
+          <div class="pad-top">
+            <div>
+              <div class="pad-ttl">GIÁM ĐỊNH VIÊN PTI</div>
+              <div class="pad-sub" id="padNameGdv">—</div>
+            </div>
+            <button type="button" class="btn-clear" data-clear="gdv">Xoá / Ký lại</button>
+          </div>
+          <div class="pad-box" id="boxGdv">
+            <canvas id="padGdv"></canvas>
+            <div class="pad-line"></div>
+            <div class="pad-hint">Ký bằng ngón tay, bút cảm ứng hoặc chuột</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-line">
+        <button type="button" class="btn" id="signBtn" style="width:auto; flex:1; min-width:240px;">
+          <span class="spinner" id="signSpin"></span>
+          <span id="signText">✍️ Hoàn tất ký &amp; xuất biên bản</span>
+        </button>
+      </div>
+      <p class="sub" style="margin:10px 0 0; font-size:12.5px">
+        Khi bấm ký, hệ thống ghi lại thời điểm ký, toạ độ GPS (nếu bạn cho phép),
+        thiết bị, mã hồ sơ và mã băm SHA-256 của dữ liệu ký để chống sửa đổi về sau.
+      </p>
+
+      <!-- Dấu vết kiểm chứng sau khi ký -->
+      <div class="audit" id="auditBox" style="display:none">
+        <h3>✅ Biên bản đã ký — dấu vết kiểm chứng</h3>
+        <dl id="auditList"></dl>
+        <div class="btn-line">
+          <a class="dl" id="signedDl" download>⬇ Tải biên bản đã ký</a>
+          <a class="btn-sec" id="auditDl" download>⬇ Tải file kiểm chứng (.json)</a>
+        </div>
       </div>
     </div>
-    <iframe id="preview" title="Xem trước PDF"></iframe>
   </div>
 
   <!-- Hướng dẫn -->
@@ -457,13 +683,14 @@ python app.py</code></pre>
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   }
 
-  // Đổi yyyy-mm-dd -> dd/mm/yyyy để in lên header PDF
-  function ngayVN(){
-    const v = ngayInput.value;
+  // Đổi yyyy-mm-dd -> dd/mm/yyyy để in lên PDF
+  function dateVN(el){
+    const v = el && el.value;
     if (!v) return '';
     const [y, m, d] = v.split('-');
     return `${d}/${m}/${y}`;
   }
+  function ngayVN(){ return dateVN(ngayInput); }
 
   // Làm nổi nút "Hôm nay" khi ô ngày đang đúng là hôm nay
   function syncTodayBtn(){
@@ -481,13 +708,18 @@ python app.py</code></pre>
   // Ngày mặc định = hôm nay
   setTodayDate();
 
+  // Ô "Ngày tổn thất" để trống mặc định, nút bên cạnh dùng để xoá nhanh
+  const ngayTonInput = document.getElementById('ngayTon');
+  document.getElementById('clearTonBtn').onclick = () => { ngayTonInput.value = ''; };
+
   // Làm mới toàn bộ form sau khi hoàn tất 1 tác vụ, sẵn sàng cho hồ sơ tiếp theo
   function resetForm(){
     imgFiles = [];
     imgInput.value = '';
     renderImgs();
-    document.getElementById('bks').value = '';
-    document.getElementById('gdv').value = '';
+    ['bks','gdv','diaDiemTon','chuXe','sdtChuXe','gplx','sdtGdv','soHoSo',
+     'diaDiemGd','yKien'].forEach(id => { document.getElementById(id).value = ''; });
+    ngayTonInput.value = '';
     setTodayDate();
     clearErr();
     if (preview.src) { try { URL.revokeObjectURL(preview.src); } catch(_){} }
@@ -495,6 +727,7 @@ python app.py</code></pre>
     if (dlLink.href) { try { URL.revokeObjectURL(dlLink.href); } catch(_){} }
     dlLink.removeAttribute('href');
     result.style.display = 'none';
+    resetBienBan();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   resetBtn.onclick = resetForm;
@@ -618,6 +851,8 @@ python app.py</code></pre>
       dlLink.download = nm;
       outName.textContent = nm;
       result.style.display = 'block';
+      resetBienBan();          // thông tin vừa đổi → biên bản phải dựng lại
+      showTab('anh');
       result.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
       showErr(err.message || 'Không thể kết nối máy chủ.');
@@ -625,6 +860,387 @@ python app.py</code></pre>
       setLoading(false);
     }
   });
+
+  // ======================================================================
+  // MÀN HÌNH 2 — BIÊN BẢN GIÁM ĐỊNH (mẫu BM.PTI.CG.02.08a) + KÝ TAY
+  // ======================================================================
+  const tabAnhBtn  = document.getElementById('tabAnh');
+  const tabBBBtn   = document.getElementById('tabBB');
+  const paneAnh    = document.getElementById('paneAnh');
+  const paneBB     = document.getElementById('paneBB');
+  const bbPages    = document.getElementById('bbPages');
+  const bbDl       = document.getElementById('bbDl');
+  const bbErr      = document.getElementById('bbErr');
+  const bbState    = document.getElementById('bbState');
+  const bbReload   = document.getElementById('bbReload');
+  const verifyList = document.getElementById('verifyList');
+  const consent    = document.getElementById('consent');
+  const signBtn    = document.getElementById('signBtn');
+  const signSpin   = document.getElementById('signSpin');
+  const signText   = document.getElementById('signText');
+  const auditBox   = document.getElementById('auditBox');
+  const auditList  = document.getElementById('auditList');
+  const signedDl   = document.getElementById('signedDl');
+  const auditDl    = document.getElementById('auditDl');
+
+  let bbLoaded = false;   // đã dựng bản xem trước chưa
+  let bbSigned = false;   // đã ký xong chưa
+
+  // Thông tin biên bản lấy từ form màn hình 1
+  function bbFields(){
+    const g = id => (document.getElementById(id).value || '').trim();
+    return {
+      bks: g('bks'), gdv: g('gdv'), ngay: ngayVN(),
+      ngay_ton_that: dateVN(ngayTonInput), dia_diem_ton_that: g('diaDiemTon'),
+      chu_xe: g('chuXe'), sdt_chu_xe: g('sdtChuXe'), gplx: g('gplx'),
+      sdt_gdv: g('sdtGdv'), so_ho_so: g('soHoSo'), dia_diem_gd: g('diaDiemGd'),
+      phong: g('phong'), y_kien: g('yKien'),
+    };
+  }
+
+  function bbFormData(){
+    const fd = new FormData();
+    const f = bbFields();
+    Object.keys(f).forEach(k => fd.append(k, f[k]));
+    return fd;
+  }
+
+  function showBBErr(msg){ bbErr.textContent = msg; bbErr.className = 'msg err'; bbErr.style.display = 'block'; }
+  function clearBBErr(){ bbErr.style.display = 'none'; }
+
+  // Hiển thị từng trang biên bản dưới dạng ảnh (chạy được trên mọi trình duyệt)
+  function showPages(pages){
+    if (!pages || !pages.length){
+      bbPages.innerHTML = '<div class="pdf-empty">Không dựng được ảnh xem trước — hãy tải file PDF.</div>';
+      return;
+    }
+    bbPages.innerHTML = '';
+    pages.forEach((b64, i) => {
+      const img = document.createElement('img');
+      img.src = 'data:image/png;base64,' + b64;
+      img.alt = 'Biên bản giám định — trang ' + (i + 1);
+      bbPages.appendChild(img);
+    });
+  }
+
+  // Gắn PDF (base64) vào một liên kết tải về
+  function setPdfLink(a, b64, name){
+    if (a.href) { try { URL.revokeObjectURL(a.href); } catch(_){} }
+    a.href = URL.createObjectURL(b64ToBlob(b64, 'application/pdf'));
+    a.download = name;
+  }
+
+  function showTab(which){
+    const bb = which === 'bb';
+    tabBBBtn.classList.toggle('active', bb);
+    tabAnhBtn.classList.toggle('active', !bb);
+    paneBB.style.display = bb ? 'block' : 'none';
+    paneAnh.style.display = bb ? 'none' : 'block';
+    if (bb){
+      // Canvas chỉ đo được kích thước khi pane đã hiển thị
+      padKhach.setup(); padGdv.setup();
+      renderVerify();
+      if (!bbLoaded) loadBienBan();
+    }
+  }
+  tabAnhBtn.onclick = () => showTab('anh');
+  tabBBBtn.onclick  = () => showTab('bb');
+
+  // --- Bảng xác nhận thông tin trước khi ký ---------------------------------
+  function renderVerify(){
+    const f = bbFields();
+    const items = [
+      ['Biển kiểm soát', f.bks],
+      ['Lái xe / Chủ xe', f.chu_xe],
+      ['Số GPLX', f.gplx],
+      ['SĐT lái xe / chủ xe', f.sdt_chu_xe],
+      ['Ngày tổn thất', f.ngay_ton_that],
+      ['Địa điểm tổn thất', f.dia_diem_ton_that],
+      ['Giám định viên', f.gdv],
+      ['Ngày giám định', f.ngay],
+      ['Gara / Địa điểm giám định', f.dia_diem_gd],
+      ['Số hồ sơ', f.so_ho_so],
+    ];
+    verifyList.innerHTML = items.map(([k, v]) =>
+      '<dt>' + esc(k) + '</dt><dd' + (v ? '' : ' class="empty"') + '>'
+      + esc(v || 'chưa nhập') + '</dd>').join('');
+    document.getElementById('padNameKhach').textContent = f.chu_xe || '—';
+    document.getElementById('padNameGdv').textContent = f.gdv || '—';
+  }
+
+  // --- Dựng bản xem trước của biên bản --------------------------------------
+  async function loadBienBan(){
+    clearBBErr();
+    const bks = document.getElementById('bks').value.trim();
+    if (!bks) return showBBErr('Vui lòng nhập biển số xe ở bước 2 rồi dựng lại biên bản.');
+    bbState.textContent = 'đang dựng bản xem trước…';
+    bbPages.innerHTML = '<div class="pdf-empty">Đang dựng biên bản…</div>';
+    try {
+      const res = await fetch('/bien-ban', { method: 'POST', body: bbFormData() });
+      let j = null;
+      try { j = await res.json(); } catch(_) {}
+      if (!res.ok || !j || !j.pdf) throw new Error((j && j.error) || `Máy chủ trả lỗi (HTTP ${res.status}).`);
+
+      showPages(j.pages);
+      setPdfLink(bbDl, j.pdf, j.name);
+      bbLoaded = true;
+      bbSigned = false;
+      bbState.textContent = 'bản xem trước, chưa ký';
+      renderVerify();
+    } catch (err) {
+      bbPages.innerHTML = '<div class="pdf-empty">Chưa dựng được bản xem trước.</div>';
+      bbState.textContent = 'chưa dựng được';
+      showBBErr(err.message || 'Không thể kết nối máy chủ.');
+    }
+  }
+  bbReload.onclick = () => { auditBox.style.display = 'none'; loadBienBan(); };
+
+  // --- Ô ký tay (HTML5 Canvas, hỗ trợ cảm ứng + bút + chuột) ----------------
+  function makeSignaturePad(canvas, box){
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    // Nét ký được lưu lại theo toạ độ CSS px để vẽ lại ngay khi canvas phải
+    // dựng lại (xoay máy, bàn phím ảo bật/tắt, đổi kích thước cửa sổ).
+    let strokes = [], cur = null, drawing = false;
+
+    function pen(){
+      ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0f172a';
+    }
+
+    function redraw(){
+      const dpr = window.devicePixelRatio || 1;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      pen();
+      strokes.forEach(st => {
+        if (!st.length) return;
+        ctx.beginPath();
+        ctx.moveTo(st[0].x, st[0].y);
+        if (st.length === 1) ctx.lineTo(st[0].x + 0.01, st[0].y);
+        else st.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+      });
+      box.classList.toggle('inked', strokes.length > 0);
+    }
+
+    function setup(){
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width) return;
+      const dpr = window.devicePixelRatio || 1;
+      const w = Math.max(1, Math.round(rect.width * dpr));
+      const h = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width === w && canvas.height === h) return;   // không đổi thì giữ nguyên
+      canvas.width = w; canvas.height = h;
+      redraw();
+    }
+
+    function pos(e){
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
+      drawing = true;
+      cur = [pos(e)];
+      strokes.push(cur);
+      box.classList.add('inked');
+      pen();
+      ctx.beginPath(); ctx.moveTo(cur[0].x, cur[0].y);
+      ctx.lineTo(cur[0].x + 0.01, cur[0].y); ctx.stroke();
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!drawing || !cur) return;
+      e.preventDefault();
+      const p = pos(e), last = cur[cur.length - 1];
+      cur.push(p);
+      ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t =>
+      canvas.addEventListener(t, () => { drawing = false; cur = null; }));
+
+    function clear(){
+      strokes = []; cur = null; drawing = false;
+      redraw();
+    }
+
+    // Xuất PNG nền trong suốt, đã cắt sát nét ký
+    function toPNG(){
+      if (!strokes.length) return null;
+      const w = canvas.width, h = canvas.height;
+      let data;
+      try { data = ctx.getImageData(0, 0, w, h).data; } catch(_) { return canvas.toDataURL('image/png'); }
+      let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      for (let y = 0; y < h; y++){
+        for (let x = 0; x < w; x++){
+          if (data[(y * w + x) * 4 + 3] > 8){
+            if (x < x0) x0 = x;
+            if (x > x1) x1 = x;
+            if (y < y0) y0 = y;
+            if (y > y1) y1 = y;
+          }
+        }
+      }
+      if (x1 < 0) return null;
+      const pad = Math.round(8 * (window.devicePixelRatio || 1));
+      x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad);
+      x1 = Math.min(w - 1, x1 + pad); y1 = Math.min(h - 1, y1 + pad);
+      const out = document.createElement('canvas');
+      out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
+      out.getContext('2d').drawImage(canvas, x0, y0, out.width, out.height,
+                                     0, 0, out.width, out.height);
+      return out.toDataURL('image/png');
+    }
+
+    window.addEventListener('resize', setup);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', setup);
+    return { setup, clear, toPNG, isInked: () => strokes.length > 0 };
+  }
+
+  const padKhach = makeSignaturePad(document.getElementById('padKhach'), document.getElementById('boxKhach'));
+  const padGdv   = makeSignaturePad(document.getElementById('padGdv'),   document.getElementById('boxGdv'));
+  const pads = { khach: padKhach, gdv: padGdv };
+  document.querySelectorAll('.btn-clear').forEach(b => {
+    b.onclick = () => pads[b.dataset.clear].clear();
+  });
+
+  // --- Thông tin kiểm chứng của thiết bị ký ---------------------------------
+  function deviceInfo(){
+    const parts = [navigator.userAgent];
+    if (navigator.platform) parts.push(navigator.platform);
+    if (window.screen) parts.push(`${screen.width}×${screen.height}`);
+    return parts.join(' · ').slice(0, 220);
+  }
+
+  function clientTime(){
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    const off = -d.getTimezoneOffset() / 60;
+    return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} `
+         + `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} `
+         + `(GMT${off >= 0 ? '+' : ''}${off})`;
+  }
+
+  function getGPS(){
+    return new Promise(resolve => {
+      if (!navigator.geolocation) return resolve('thiết bị không hỗ trợ định vị');
+      let done = false;
+      const finish = v => { if (!done){ done = true; resolve(v); } };
+      navigator.geolocation.getCurrentPosition(
+        p => finish(`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`
+                    + ` (±${Math.round(p.coords.accuracy)} m)`),
+        e => finish('không lấy được vị trí — ' + (e && e.message ? e.message : 'bị từ chối')),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+      setTimeout(() => finish('không lấy được vị trí — quá thời gian chờ'), 9000);
+    });
+  }
+
+  function b64ToBlob(b64, type){
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: type });
+  }
+
+  // --- Ký và xuất biên bản --------------------------------------------------
+  function setSigning(on){
+    signBtn.disabled = on;
+    signSpin.style.display = on ? 'inline-block' : 'none';
+    signText.textContent = on ? 'Đang ký và dựng biên bản…' : '✍️ Hoàn tất ký & xuất biên bản';
+  }
+
+  async function signBienBan(){
+    clearBBErr();
+    if (!bbLoaded) return showBBErr('Hãy dựng bản xem trước biên bản trước khi ký.');
+    if (!consent.checked) return showBBErr('Khách hàng cần tích ô xác nhận đã đọc và đồng ý nội dung biên bản.');
+    const sigKhach = padKhach.toPNG();
+    const sigGdv   = padGdv.toPNG();
+    if (!sigKhach && !sigGdv) return showBBErr('Chưa có chữ ký nào. Vui lòng ký vào ô ký tay.');
+    if (!sigKhach) return showBBErr('Thiếu chữ ký của lái xe / chủ xe.');
+    if (!sigGdv)   return showBBErr('Thiếu chữ ký của giám định viên PTI.');
+
+    setSigning(true);
+    try {
+      const gps = await getGPS();
+      const fd = bbFormData();
+      fd.append('sig_khach', sigKhach);
+      fd.append('sig_gdv', sigGdv);
+      fd.append('dong_y', '1');
+      fd.append('audit', JSON.stringify({
+        client_time: clientTime(), gps: gps, device: deviceInfo(),
+      }));
+
+      const res = await fetch('/bien-ban/ky', { method: 'POST', body: fd });
+      let j = null;
+      try { j = await res.json(); } catch(_) {}
+      if (!res.ok || !j || !j.pdf) throw new Error((j && j.error) || `Máy chủ trả lỗi (HTTP ${res.status}).`);
+
+      showPages(j.pages);
+      setPdfLink(bbDl, j.pdf, j.name);
+      setPdfLink(signedDl, j.pdf, j.name);
+
+      const auditBlob = new Blob([JSON.stringify(j.audit, null, 2)], { type: 'application/json' });
+      if (auditDl.href) { try { URL.revokeObjectURL(auditDl.href); } catch(_){} }
+      auditDl.href = URL.createObjectURL(auditBlob);
+      auditDl.download = j.name.replace(/\.pdf$/i, '') + '_kiemchung.json';
+
+      renderAudit(j.audit);
+      bbSigned = true;
+      bbState.textContent = 'đã ký — ' + (j.audit.signed_at_vn || '');
+      auditBox.style.display = 'block';
+      auditBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      showBBErr(err.message || 'Không thể kết nối máy chủ.');
+    } finally {
+      setSigning(false);
+    }
+  }
+  signBtn.onclick = signBienBan;
+
+  function renderAudit(a){
+    const rows = [
+      ['Mã hồ sơ', a.so_ho_so],
+      ['Thời điểm ký (giờ VN)', a.signed_at_vn],
+      ['Thời điểm ký (UTC)', a.signed_at_utc],
+      ['Giờ trên thiết bị người ký', a.client_time],
+      ['Toạ độ GPS', a.gps],
+      ['Thiết bị / trình duyệt', a.device],
+      ['Địa chỉ IP phiên ký', a.ip],
+      ['Xác nhận đã đọc biên bản', a.consent],
+    ];
+    auditList.innerHTML = rows.map(([k, v]) =>
+      '<dt>' + esc(k) + '</dt><dd>' + esc(v || '—') + '</dd>').join('')
+      + '<dt>Mã kiểm chứng dữ liệu ký</dt><dd class="hash">' + esc(a.payload_hash || '—') + '</dd>'
+      + '<dt>Mã băm file PDF đã ký</dt><dd class="hash">' + esc(a.file_hash || '—') + '</dd>';
+  }
+
+  // Sửa thông tin ở bước 2 sau khi đã dựng biên bản → nhắc dựng lại cho khớp
+  document.querySelectorAll('#form input, #form textarea').forEach(el => {
+    el.addEventListener('input', () => {
+      if (!bbLoaded || bbSigned) return;
+      bbState.textContent = 'thông tin đã thay đổi — bấm “Dựng lại” để cập nhật';
+      renderVerify();
+    });
+  });
+
+  // Trả khối biên bản về trạng thái ban đầu (khi tạo hồ sơ mới / đổi thông tin)
+  function resetBienBan(){
+    bbLoaded = false; bbSigned = false;
+    clearBBErr();
+    bbPages.innerHTML = '<div class="pdf-empty">Chưa dựng bản xem trước biên bản.</div>';
+    [bbDl, signedDl, auditDl].forEach(a => {
+      if (a.href) { try { URL.revokeObjectURL(a.href); } catch(_){} }
+      a.removeAttribute('href');
+    });
+    auditBox.style.display = 'none';
+    auditList.innerHTML = '';
+    consent.checked = false;
+    padKhach.clear(); padGdv.clear();
+    bbState.textContent = 'bản xem trước, chưa ký';
+  }
 </script>
 
 </body>

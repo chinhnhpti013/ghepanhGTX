@@ -25,14 +25,24 @@ File PDF tự động chuyển sang ảnh bằng PyMuPDF (`pip install PyMuPDF`)
 
 ### 2. Thông tin giám định (nhập trực tiếp)
 
-| Thông tin | Nguồn | Bắt buộc |
-|-----------|-------|----------|
-| Biển số xe (BKS) | Ô "Biển số xe" trên web, hoặc tham số `bks=` khi chạy script | ✅ |
-| Giám định viên | Ô "Giám định viên", hoặc `gdv=` | — |
-| Ngày giám định | Ô "Ngày giám định", hoặc `ngay=` | — |
+| Thông tin | Nguồn | Bắt buộc | Dùng cho |
+|-----------|-------|----------|----------|
+| Biển số xe (BKS) | Ô "Biển số xe" trên web, hoặc tham số `bks=` khi chạy script | ✅ | Bộ ảnh + Biên bản |
+| Giám định viên | Ô "Giám định viên", hoặc `gdv=` | — | Bộ ảnh + Biên bản |
+| Ngày giám định | Ô "Ngày giám định", hoặc `ngay=` | — | Bộ ảnh + Biên bản |
+| **Ngày tổn thất** | Ô "Ngày tổn thất" (date picker) | — | Biên bản |
+| **Địa điểm tổn thất** | Ô "Địa điểm tổn thất" | — | Biên bản |
 
 BKS được chuẩn hoá bằng `normalize_bks()` (regex `\d{2}[A-Z]{1,2}-?\d{3,5}\.?\d*`),
 dùng cho tiêu đề mỗi trang và tên file output `GiamDinh_GiayToXe_{BKS}.pdf`.
+
+### 3. Thông tin thêm cho Biên bản giám định (khối gập trên web, đều không bắt buộc)
+
+Lái xe/Chủ xe · SĐT lái xe/chủ xe · Số GPLX · SĐT giám định viên · Số hồ sơ ·
+Gara / Địa điểm giám định · Phòng / Khu vực giám định · Ý kiến của các bên.
+
+> Các trường này chỉ dùng cho **Biên bản giám định** (mục riêng bên dưới), không
+> ảnh hưởng bộ ảnh giấy tờ.
 
 ---
 
@@ -184,8 +194,14 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Mở http://127.0.0.1:5000 → (1) chọn ảnh/PDF, (2) nhập biển số xe + GĐV + ngày,
-(3) bấm **Tạo PDF giám định** → xem trước và tải về.
+**Màn hình 1 — nhập liệu:** mở http://127.0.0.1:5000 → (1) chọn ảnh/PDF, (2) nhập biển số
+xe + GĐV + ngày giám định + ngày/địa điểm tổn thất (và khối "Thông tin thêm cho Biên bản
+giám định" nếu cần), (3) bấm **Tạo PDF giám định**.
+
+**Màn hình 2 — kết quả, 2 tab:**
+- **Bản ảnh giấy tờ** — PDF bộ ảnh như trước, xem trước và tải về.
+- **Biên bản giám định** — biên bản mẫu `BM.PTI.CG.02.08a`, xem trước, ký tay và tải về
+  (xem mục "Biên bản giám định" bên dưới).
 
 Giao diện tự nạp danh mục từ endpoint `/doc-types` (trả về `BUILTIN_DOC_TYPES` đã ghi đè
 bởi `doc_types.json`), nên bảng danh mục và nhãn hạng mục trên từng file luôn khớp server.
@@ -215,6 +231,65 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/1
 
 ---
 
+## Biên bản giám định (mẫu `BM.PTI.CG.02.08a`)
+
+Màn hình 2, tab **Biên bản giám định** dựng bản PDF theo đúng mẫu PTI
+*Quy trình giám định bảo hiểm xe cơ giới – BM.PTI.CG.02.08a*:
+
+```
+[logo PTI] TỔNG CÔNG TY CỔ PHẦN BẢO HIỂM BƯU ĐIỆN / Số 95, Trần Thái Tông… / Tel: 1900545475
+                       BIÊN BẢN GIÁM ĐỊNH THIỆT HẠI
+Hôm nay, ngày {ngay} tại : {dia_diem_gd}
+Chúng tôi gồm có:
+  1/ {gdv}        GĐV {phong}, SĐT: {sdt_gdv}
+  2 {chu_xe}      là Đại diện: Chủ xe/lái xe BKS : {bks} , SĐT {sdt_chu_xe}
+Giám định thiệt hại xe ô tô BKS {bks} bị tổn thất ngày : {ngay_ton_that}
+Tại : {dia_diem_ton_that}
+1. Thông tin tai nạn : Theo Thông báo tai nạn và yêu cầu bồi thường
+2. Hạng mục giám định : (Theo các phụ lục đính kèm)   → bảng 10 dòng để trống
+3. Ý kiến của các bên tham gia giám định:  {y_kien} hoặc dòng kẻ chấm
+4. Đơn vị sửa chữa: Gara {dia_diem_gd} / Đ/c … SĐT liên hệ …
+        LÁI XE/CHỦ XE                GIÁM ĐỊNH VIÊN PTI     ← vị trí chèn chữ ký
+[DẤU VẾT KIỂM CHỨNG CHỮ KÝ ĐIỆN TỬ]                        ← chỉ có ở bản đã ký
+```
+
+Bản chưa ký có watermark chéo **"BẢN XEM TRƯỚC — CHƯA KÝ"**; bản đã ký bỏ watermark.
+Xem trước hiển thị bằng **ảnh từng trang** (không dùng `<iframe>` PDF) để chạy được cả
+trên trình duyệt điện thoại — nơi biên bản thường được ký tại hiện trường.
+
+### Ký tay (signature pad)
+
+- Hai ô ký riêng: **Lái xe/Chủ xe** và **Giám định viên PTI**, mỗi ô có nút *Xoá / Ký lại*.
+- HTML5 Canvas + Pointer Events (ngón tay, bút cảm ứng, chuột), `touch-action: none`.
+- Nét ký được lưu theo toạ độ nên vẫn còn khi xoay máy / bật bàn phím ảo (canvas vẽ lại).
+- Xuất **PNG nền trong suốt**, đã cắt sát nét ký, rồi chèn đúng vị trí ô ký của mẫu.
+- Trước khi ký: khối **"Xác nhận thông tin trước khi ký"** hiện lại BKS, họ tên, số GPLX,
+  ngày/địa điểm tổn thất… và ô tích bắt buộc *"Tôi đã đọc và đồng ý nội dung biên bản"*.
+
+### Dấu vết kiểm chứng
+
+In ở cuối biên bản đã ký và tải về được dưới dạng `*_kiemchung.json`:
+
+| Mục | Nguồn |
+|-----|-------|
+| Mã hồ sơ | ô "Số hồ sơ" |
+| Thời điểm ký (giờ VN / UTC) | đồng hồ máy chủ |
+| Giờ trên thiết bị người ký | trình duyệt |
+| Toạ độ GPS | `navigator.geolocation` (từ chối vẫn ký được, ghi rõ lý do) |
+| Thiết bị / trình duyệt | User-Agent + nền tảng + độ phân giải |
+| Địa chỉ IP phiên ký | `X-Forwarded-For` hoặc `remote_addr` |
+| Mã kiểm chứng (SHA-256) | băm toàn bộ dữ liệu ký — in lên biên bản |
+| Mã băm file PDF đã ký | SHA-256 của file trả về — chỉ có trong JSON/giao diện |
+
+### Endpoint
+
+| Endpoint | Vào | Ra |
+|----------|-----|-----|
+| `POST /bien-ban` | các trường biên bản | JSON `{name, pdf(base64), pages[PNG base64], file_hash}` — bản chưa ký |
+| `POST /bien-ban/ky` | thêm `sig_khach`, `sig_gdv` (dataURL PNG), `dong_y=1`, `audit` (JSON) | JSON `{name, pdf, pages, audit}` — bản đã ký |
+
+---
+
 ## Cấu trúc code (`gtx_gen.py`)
 
 | Thành phần | Vai trò |
@@ -236,6 +311,21 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/1
 | `pdf_to_images` | PyMuPDF render PDF → JPG tạm ở 150 DPI |
 | `main(..., extra_doc_types=None)` | Điều phối toàn bộ, xuất PDF; `extra_doc_types` là hạng mục thêm tại chỗ |
 
+## Cấu trúc code (`bien_ban.py`)
+
+| Thành phần | Vai trò |
+|-----------|---------|
+| `register_fonts()` / `styles()` | Font Times New Roman → Arial → Be Vietnam Pro → DejaVu; bộ style của biên bản |
+| `clean_text` / `esc` / `ten_gara` | Làm sạch, escape chuỗi nhận từ web; tránh in "Gara Gara…" |
+| `decode_signature(data_url)` | Giải mã dataURL chữ ký, chỉ nhận PNG hợp lệ ≤ 3 MB |
+| `logo_png(path)` | Đổi chữ "pti" trắng của logo sang navy để dùng trên nền giấy |
+| `make_page_decorator(draft)` | Footer mã biểu mẫu + watermark "BẢN XEM TRƯỚC — CHƯA KÝ" |
+| `letterhead` / `body_flowables` | **Nội dung mẫu BM.PTI.CG.02.08a — sửa ở đây khi mẫu thay đổi** |
+| `hang_muc_table` | Bảng "2. Hạng mục giám định" 2 tầng tiêu đề, 10 dòng |
+| `signature_flowables` | Hai ô ký, chèn ảnh PNG chữ ký khi đã ký |
+| `audit_flowables` / `payload_hash` | Khối dấu vết kiểm chứng và mã băm SHA-256 của dữ liệu ký |
+| `build(...)` | Dựng PDF, trả `(đường dẫn, payload_hash, file_hash)` |
+
 ---
 
 ## Lưu ý quan trọng
@@ -252,3 +342,15 @@ python gtx_gen.py --bks "14K-240.48" --gdv "Nguyễn Văn Hướng" --ngay "14/1
 - **Logo file**: `logo-ptisos.png` nằm trong thư mục `assets\`
 - **Màu BLUE header**: `(0, 112, 192)` — KHÔNG dùng navy `(0, 32, 96)`
 - **LOGO_PX**: 107 (= 89 × 1.2)
+
+### Riêng Biên bản giám định (`bien_ban.py`)
+
+- **Mẫu chuẩn**: `BM.PTI.CG.02.08a` — sửa nội dung ở `body_flowables()`, không sửa chỗ khác
+- **Bản chưa ký** luôn có watermark "BẢN XEM TRƯỚC — CHƯA KÝ"; ký xong watermark biến mất
+- **Chữ ký**: PNG nền trong suốt, đã cắt sát nét; server chỉ nhận PNG hợp lệ ≤ 3 MB
+- **Bắt buộc khi ký**: đủ 2 chữ ký + ô tích "đã đọc và đồng ý", thiếu một thứ là từ chối
+- **Xem trước bằng ảnh PNG** chứ không nhúng `<iframe>` PDF — để chạy trên điện thoại
+- **Mã kiểm chứng in trên biên bản** = SHA-256 của dữ liệu ký; **mã băm file PDF** nằm ở
+  JSON kiểm chứng (không in lên PDF vì sẽ tự thay đổi chính nó)
+- **Font biên bản**: Times New Roman cho giống mẫu Word, thiếu thì lùi về Arial/Be Vietnam Pro
+- **Logo trên biên bản**: đổi chữ "pti" trắng sang navy `(31, 59, 115)` để thấy trên nền giấy
